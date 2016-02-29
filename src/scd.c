@@ -37,7 +37,7 @@ fsize(const char *filename)
 }
 
 int
-garble_to_file(GarbledCircuit *gc, char *fname)
+garble_to_file(garble_circuit *gc, char *fname)
 {
     msgpack_sbuffer *buffer;
     msgpack_packer *pk;
@@ -77,7 +77,7 @@ garble_to_file(GarbledCircuit *gc, char *fname)
 }
 
 int
-garble_from_file(GarbledCircuit *gc, char *fname)
+garble_from_file(garble_circuit *gc, char *fname)
 {
     msgpack_sbuffer buffer;
     msgpack_unpacked msg;
@@ -107,11 +107,11 @@ garble_from_file(GarbledCircuit *gc, char *fname)
     gc->nFixedWires = (*p++).via.i64;
     gc->r = gc->n + gc->q + gc->nFixedWires;
 
-    gc->gates = calloc(gc->q, sizeof(Gate));
-    gc->garbledTable = calloc(gc->q, sizeof(GarbledTable));
-    gc->wires = calloc(gc->r, sizeof(Wire));
+    gc->gates = calloc(gc->q, sizeof(garble_gate));
+    gc->garbledTable = calloc(gc->q, sizeof(garble_table));
+    gc->wires = calloc(gc->r, sizeof(garble_wire));
     gc->outputs = calloc(gc->m, sizeof(int));
-    gc->fixedWires = calloc(gc->nFixedWires, sizeof(FixedWire));
+    gc->fixedWires = calloc(gc->nFixedWires, sizeof(garble_fixed_wire));
 	if (gc->outputs == NULL || gc->gates == NULL || gc->garbledTable == NULL
         || gc->wires == NULL || gc->fixedWires == NULL) {
 		return -1;

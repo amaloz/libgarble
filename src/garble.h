@@ -33,71 +33,77 @@
 typedef enum {
     GARBLE_TYPE_STANDARD,
     GARBLE_TYPE_HALFGATES,
-} GarbleType;
+} garble_type_e;
+
+typedef enum {
+    GARBLE_GATE_ZERO = 0,
+    GARBLE_GATE_ONE = 15,
+    GARBLE_GATE_AND = 8,
+    GARBLE_GATE_OR = 14,
+    GARBLE_GATE_XOR = 6,
+    GARBLE_GATE_NOT = 5,
+    GARBLE_GATE_EMPTY = -1,
+} garble_gate_type_e;
+
 
 typedef struct {
 	block label0, label1;
-} Wire;
+} garble_wire;
 
 typedef struct {
-    int type;
+    garble_gate_type_e type;
 	long input0, input1, output;
-} Gate;
+} garble_gate;
 
 typedef struct {
 	block table[3];
-} GarbledTable;
+} garble_table;
 
-typedef enum { FIXED_WIRE_ZERO = 0, FIXED_WIRE_ONE = 1 } FixedWire_e;
+typedef enum {
+    GARBLE_FIXED_WIRE_ZERO = 0,
+    GARBLE_FIXED_WIRE_ONE = 1
+} garble_fixed_wire_e;
 
 typedef struct {
-    FixedWire_e type;
+    garble_fixed_wire_e type;
     int idx;
-} FixedWire;
+} garble_fixed_wire;
 
 typedef struct {
 	int n, m, q, r, nFixedWires;
-	Gate *gates;                /* q */
-	GarbledTable *garbledTable; /* q */
-	Wire *wires;                /* r */
-    FixedWire *fixedWires;      /* <= r */
-	int *outputs;               /* m */
+	garble_gate *gates;            /* q */
+	garble_table *garbledTable;    /* q */
+	garble_wire *wires;            /* r */
+    garble_fixed_wire *fixedWires; /* <= r */
+	int *outputs;                  /* m */
     block fixedLabel;
 	block globalKey;
-} GarbledCircuit;
+} garble_circuit;
 
 /* Used for constructing a circuit, and not for garbling as the name suggests */
 typedef struct {
 	long wireIndex;
-} GarblingContext;
-
-#define FIXED_ZERO_GATE 0
-#define FIXED_ONE_GATE 15
-#define ANDGATE 8
-#define ORGATE 14
-#define XORGATE 6
-#define NOTGATE 5
-#define NO_GATE -1
+} garble_context;
 
 int
-garble_garble(GarbledCircuit *gc, const block *inputLabels, block *outputLabels,
-              GarbleType type);
+garble_garble(garble_circuit *gc, const block *inputLabels, block *outputLabels,
+              garble_type_e type);
 void
-garble_hash(const GarbledCircuit *gc,
+garble_hash(const garble_circuit *gc,
             unsigned char hash[SHA_DIGEST_LENGTH],
-            GarbleType type);
+            garble_type_e type);
 int
-garble_check(GarbledCircuit *gc,
+garble_check(garble_circuit *gc,
              const unsigned char hash[SHA_DIGEST_LENGTH],
-             GarbleType type);
+             garble_type_e type);
 block
 garble_create_delta(void);
 void
 garble_create_input_labels(block *labels, int n, block *delta);
 
 int
-garble_eval(const GarbledCircuit *gc, const block *inputs, block *outputs,
-            GarbleType type);
+garble_eval(const garble_circuit *gc, const block *inputs, block *outputs,
+            garble_type_e type);
 void
 garble_extract_labels(block *extracted, const block *labels, const int *bits,
                       long n);
@@ -105,36 +111,36 @@ int
 garble_map_outputs(const block *outputs, const block *map, int *vals, int m);
 
 int
-garble_to_file(GarbledCircuit *gc, char *fname);
+garble_to_file(garble_circuit *gc, char *fname);
 int
-garble_from_file(GarbledCircuit *gc, char *fname);
+garble_from_file(garble_circuit *gc, char *fname);
 
 int
-garble_next_wire(GarblingContext *ctxt);
+garble_next_wire(garble_context *ctxt);
 
 void
-garble_start_building(GarbledCircuit *gc, GarblingContext *ctxt);
+garble_start_building(garble_circuit *gc, garble_context *ctxt);
 void
-garble_finish_building(GarbledCircuit *gc, const int *outputs);
+garble_finish_building(garble_circuit *gc, const int *outputs);
 
 int
-garble_new(GarbledCircuit *gc, int n, int m, int q, int r);
+garble_new(garble_circuit *gc, int n, int m, int q, int r);
 void
-garble_delete(GarbledCircuit *gc);
+garble_delete(garble_circuit *gc);
 
 size_t
-garble_size(const GarbledCircuit *gc, bool wires);
+garble_size(const garble_circuit *gc, bool wires);
 
 int
-garble_save(const GarbledCircuit *gc, FILE *f, bool wires);
+garble_save(const garble_circuit *gc, FILE *f, bool wires);
 
 int
-garble_load(GarbledCircuit *gc, FILE *f, bool wires);
+garble_load(garble_circuit *gc, FILE *f, bool wires);
 
 void
-garble_to_buffer(const GarbledCircuit *gc, char *buf, bool wires);
+garble_to_buffer(const garble_circuit *gc, char *buf, bool wires);
 
 int
-garble_from_buffer(GarbledCircuit *gc, const char *buf, bool wires);
+garble_from_buffer(garble_circuit *gc, const char *buf, bool wires);
 
 #endif

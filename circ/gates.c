@@ -16,11 +16,12 @@
 
 */
 
-#include "garble.h"
-#include "garble/gates.h"
+#include <garble.h>
+#include "gates.h"
 
 static void
-genericGate(GarbledCircuit *gc, int input0, int input1, int output, int type)
+_gate(GarbledCircuit *gc, int input0, int input1, int output,
+      garble_gate_type_e type)
 {
     Gate *g;
 
@@ -32,48 +33,44 @@ genericGate(GarbledCircuit *gc, int input0, int input1, int output, int type)
 }
 
 void
-ANDGate(GarbledCircuit *gc, GarblingContext *ctxt,
-        int input0, int input1, int output)
+garble_gate_AND(GarbledCircuit *gc, int input0, int input1, int output)
 {
-    genericGate(gc, input0, input1, output, ANDGATE);
+    _gate(gc, input0, input1, output, GARBLE_GATE_AND);
 }
 
 void
-XORGate(GarbledCircuit *gc, GarblingContext *ctxt,
-        int input0, int input1, int output)
+garble_gate_XOR(GarbledCircuit *gc, int input0, int input1, int output)
 {
-    genericGate(gc, input0, input1, output, XORGATE);
+    _gate(gc, input0, input1, output, GARBLE_GATE_XOR);
 }
 
 void
-ORGate(GarbledCircuit *gc, GarblingContext *ctxt,
-       int input0, int input1, int output)
+garble_gate_OR(GarbledCircuit *gc, int input0, int input1, int output)
 {
-    genericGate(gc, input0, input1, output, ORGATE);
+    _gate(gc, input0, input1, output, GARBLE_GATE_OR);
 }
 
 void
-NOTGate(GarbledCircuit *gc, GarblingContext *ctxt,
-        int input0, int output)
+garble_gate_NOT(GarbledCircuit *gc, int input0, int output)
 {
-    genericGate(gc, input0, input0, output, NOTGATE);
+    _gate(gc, input0, input0, output, GARBLE_GATE_NOT);
 }
 
 int
-fixedZeroWire(GarbledCircuit *gc, GarblingContext *ctxt)
+garble_gate_zero(GarbledCircuit *gc, GarblingContext *ctxt)
 {
     int ind = garble_next_wire(ctxt);
-    gc->fixedWires[gc->nFixedWires].type = FIXED_WIRE_ZERO;
+    gc->fixedWires[gc->nFixedWires].type = GARBLE_GATE_ZERO;
     gc->fixedWires[gc->nFixedWires].idx = ind;
     gc->nFixedWires++;
     return ind;
 
 }
 int
-fixedOneWire(GarbledCircuit *gc, GarblingContext *ctxt)
+garble_gate_one(GarbledCircuit *gc, GarblingContext *ctxt)
 {
     int ind = garble_next_wire(ctxt);
-    gc->fixedWires[gc->nFixedWires].type = FIXED_WIRE_ONE;
+    gc->fixedWires[gc->nFixedWires].type = GARBLE_GATE_ONE;
     gc->fixedWires[gc->nFixedWires].idx = ind;
     gc->nFixedWires++;
     return ind;

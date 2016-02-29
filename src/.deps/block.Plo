@@ -1,4 +1,4 @@
-src/block.lo: src/block.c /usr/include/stdc-predef.h src/garble/block.h \
+block.lo: block.c /usr/include/stdc-predef.h garble/block.h \
  /usr/lib/gcc/x86_64-unknown-linux-gnu/5.3.0/include/wmmintrin.h \
  /usr/lib/gcc/x86_64-unknown-linux-gnu/5.3.0/include/emmintrin.h \
  /usr/lib/gcc/x86_64-unknown-linux-gnu/5.3.0/include/xmmintrin.h \
@@ -21,7 +21,7 @@ src/block.lo: src/block.c /usr/include/stdc-predef.h src/garble/block.h \
  /usr/include/wchar.h \
  /usr/lib/gcc/x86_64-unknown-linux-gnu/5.3.0/include/stdarg.h \
  /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h \
- /usr/include/bits/stdio.h src/garble/aes.h src/garble/block.h \
+ /usr/include/bits/stdio.h garble/aes.h garble/block.h \
  /usr/lib/gcc/x86_64-unknown-linux-gnu/5.3.0/include/stdint.h \
  /usr/include/stdint.h /usr/include/bits/wchar.h /usr/include/xlocale.h \
  /usr/include/openssl/rand.h /usr/include/openssl/ossl_typ.h \
@@ -29,7 +29,7 @@ src/block.lo: src/block.c /usr/include/stdc-predef.h src/garble/block.h \
 
 /usr/include/stdc-predef.h:
 
-src/garble/block.h:
+garble/block.h:
 
 /usr/lib/gcc/x86_64-unknown-linux-gnu/5.3.0/include/wmmintrin.h:
 
@@ -109,9 +109,9 @@ src/garble/block.h:
 
 /usr/include/bits/stdio.h:
 
-src/garble/aes.h:
+garble/aes.h:
 
-src/garble/block.h:
+garble/block.h:
 
 /usr/lib/gcc/x86_64-unknown-linux-gnu/5.3.0/include/stdint.h:
 

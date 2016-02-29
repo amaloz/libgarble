@@ -1,5 +1,4 @@
-src/gc.lo: src/gc.c /usr/include/stdc-predef.h src/garble.h \
- src/garble/block.h \
+gc.lo: gc.c /usr/include/stdc-predef.h garble.h garble/block.h \
  /usr/lib/gcc/x86_64-unknown-linux-gnu/5.3.0/include/wmmintrin.h \
  /usr/lib/gcc/x86_64-unknown-linux-gnu/5.3.0/include/emmintrin.h \
  /usr/lib/gcc/x86_64-unknown-linux-gnu/5.3.0/include/xmmintrin.h \
@@ -31,9 +30,9 @@ src/gc.lo: src/gc.c /usr/include/stdc-predef.h src/garble.h \
 
 /usr/include/stdc-predef.h:
 
-src/garble.h:
+garble.h:
 
-src/garble/block.h:
+garble/block.h:
 
 /usr/lib/gcc/x86_64-unknown-linux-gnu/5.3.0/include/wmmintrin.h:
 

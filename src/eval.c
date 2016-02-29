@@ -51,14 +51,14 @@ hash2(block *A, block *B, block tweak1, block tweak2,
 }
 
 static void
-_eval_halfgates(const GarbledCircuit *gc, block *labels, const AES_KEY *K)
+_eval_halfgates(const garble_circuit *gc, block *labels, const AES_KEY *K)
 {
 	for (long i = 0; i < gc->q; i++) {
-		Gate *g = &gc->gates[i];
-		if (g->type == XORGATE) {
+		garble_gate *g = &gc->gates[i];
+		if (g->type == GARBLE_GATE_XOR) {
 			labels[g->output] =
                 garble_xor(labels[g->input0], labels[g->input1]);
-		} else if (g->type == NOTGATE) {
+		} else if (g->type == GARBLE_GATE_NOT) {
             block A, tweak;
             unsigned short pa;
 
@@ -96,11 +96,11 @@ _eval_halfgates(const GarbledCircuit *gc, block *labels, const AES_KEY *K)
 }
 
 static void
-_eval_standard(const GarbledCircuit *gc, block *labels, AES_KEY *key)
+_eval_standard(const garble_circuit *gc, block *labels, AES_KEY *key)
 {
 	for (long i = 0; i < gc->q; i++) {
-		Gate *g = &gc->gates[i];
-		if (g->type == XORGATE) {
+		garble_gate *g = &gc->gates[i];
+		if (g->type == GARBLE_GATE_XOR) {
 			labels[g->output] = garble_xor(labels[g->input0], labels[g->input1]);
 		} else {
             block A, B, tmp, tweak, val;
@@ -123,8 +123,8 @@ _eval_standard(const GarbledCircuit *gc, block *labels, AES_KEY *key)
 }
 
 int
-garble_eval(const GarbledCircuit *gc, const block *inputs, block *outputs,
-            GarbleType type)
+garble_eval(const garble_circuit *gc, const block *inputs, block *outputs,
+            garble_type_e type)
 {
     AES_KEY key;
     block *labels;

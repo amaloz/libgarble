@@ -1,5 +1,4 @@
-src/aes.lo: src/aes.c /usr/include/stdc-predef.h src/garble/aes.h \
- src/garble/block.h \
+aes.lo: aes.c /usr/include/stdc-predef.h garble/aes.h garble/block.h \
  /usr/lib/gcc/x86_64-unknown-linux-gnu/5.3.0/include/wmmintrin.h \
  /usr/lib/gcc/x86_64-unknown-linux-gnu/5.3.0/include/emmintrin.h \
  /usr/lib/gcc/x86_64-unknown-linux-gnu/5.3.0/include/xmmintrin.h \
@@ -26,9 +25,9 @@ src/aes.lo: src/aes.c /usr/include/stdc-predef.h src/garble/aes.h \
 
 /usr/include/stdc-predef.h:
 
-src/garble/aes.h:
+garble/aes.h:
 
-src/garble/block.h:
+garble/block.h:
 
 /usr/lib/gcc/x86_64-unknown-linux-gnu/5.3.0/include/wmmintrin.h:
 
