@@ -20,10 +20,10 @@
 #include "gates.h"
 
 static void
-_gate(GarbledCircuit *gc, int input0, int input1, int output,
+_gate(garble_circuit *gc, int input0, int input1, int output,
       garble_gate_type_e type)
 {
-    Gate *g;
+    garble_gate *g;
 
     g = &gc->gates[gc->q++];
     g->type = type;
@@ -33,44 +33,44 @@ _gate(GarbledCircuit *gc, int input0, int input1, int output,
 }
 
 void
-garble_gate_AND(GarbledCircuit *gc, int input0, int input1, int output)
+garble_gate_AND(garble_circuit *gc, int input0, int input1, int output)
 {
     _gate(gc, input0, input1, output, GARBLE_GATE_AND);
 }
 
 void
-garble_gate_XOR(GarbledCircuit *gc, int input0, int input1, int output)
+garble_gate_XOR(garble_circuit *gc, int input0, int input1, int output)
 {
     _gate(gc, input0, input1, output, GARBLE_GATE_XOR);
 }
 
 void
-garble_gate_OR(GarbledCircuit *gc, int input0, int input1, int output)
+garble_gate_OR(garble_circuit *gc, int input0, int input1, int output)
 {
     _gate(gc, input0, input1, output, GARBLE_GATE_OR);
 }
 
 void
-garble_gate_NOT(GarbledCircuit *gc, int input0, int output)
+garble_gate_NOT(garble_circuit *gc, int input0, int output)
 {
     _gate(gc, input0, input0, output, GARBLE_GATE_NOT);
 }
 
 int
-garble_gate_zero(GarbledCircuit *gc, GarblingContext *ctxt)
+garble_gate_zero(garble_circuit *gc, garble_context *ctxt)
 {
     int ind = garble_next_wire(ctxt);
-    gc->fixedWires[gc->nFixedWires].type = GARBLE_GATE_ZERO;
+    gc->fixedWires[gc->nFixedWires].type = GARBLE_FIXED_WIRE_ZERO;
     gc->fixedWires[gc->nFixedWires].idx = ind;
     gc->nFixedWires++;
     return ind;
 
 }
 int
-garble_gate_one(GarbledCircuit *gc, GarblingContext *ctxt)
+garble_gate_one(garble_circuit *gc, garble_context *ctxt)
 {
     int ind = garble_next_wire(ctxt);
-    gc->fixedWires[gc->nFixedWires].type = GARBLE_GATE_ONE;
+    gc->fixedWires[gc->nFixedWires].type = GARBLE_FIXED_WIRE_ONE;
     gc->fixedWires[gc->nFixedWires].idx = ind;
     gc->nFixedWires++;
     return ind;

@@ -33,7 +33,7 @@ static int S2X1[8] = { 0x8C, 0x79, 0x05, 0xEB, 0x12, 0x04, 0x51, 0x53 };
 #define fbits(v, p) ((v & (1 << p)) >> p)
 
 static void
-EncoderZeroCircuit(GarbledCircuit *gc, GarblingContext *ctxt,
+EncoderZeroCircuit(garble_circuit *gc, garble_context *ctxt,
                    const int inputs[8], int outputs[8], const int enc[8])
 {
     int wires[8];
@@ -44,7 +44,7 @@ EncoderZeroCircuit(GarbledCircuit *gc, GarblingContext *ctxt,
 		for (int j = 0; j < 8; j++) {
 			if (fbits(enc[i], j)) {
 				int wire = garble_next_wire(ctxt);
-				XORGate(gc, ctxt, wires[j], inputs[i], wire);
+				XORGate(gc, wires[j], inputs[i], wire);
 				wires[j] = wire;
 			}
 		}
@@ -55,7 +55,7 @@ EncoderZeroCircuit(GarbledCircuit *gc, GarblingContext *ctxt,
 }
 
 static void
-EncoderOneCircuit(GarbledCircuit *gc, GarblingContext *ctxt, const int inputs[8],
+EncoderOneCircuit(garble_circuit *gc, garble_context *ctxt, const int inputs[8],
                   int outputs[8], const int enc[8])
 {
 	int wires[8];
@@ -66,7 +66,7 @@ EncoderOneCircuit(GarbledCircuit *gc, GarblingContext *ctxt, const int inputs[8]
 		for (int j = 0; j < 8; j++) {
 			if (fbits(enc[i], j)) {
 				int wire = garble_next_wire(ctxt);
-				XORGate(gc, ctxt, wires[j], inputs[i], wire);
+				XORGate(gc, wires[j], inputs[i], wire);
 				wires[j] = wire;
 			}
 		}
@@ -78,14 +78,14 @@ EncoderOneCircuit(GarbledCircuit *gc, GarblingContext *ctxt, const int inputs[8]
 
 
 void
-AddRoundKey(GarbledCircuit *gc, GarblingContext *ctxt, const int inputs[256],
+AddRoundKey(garble_circuit *gc, garble_context *ctxt, const int inputs[256],
             int outputs[128])
 {
 	XORCircuit(gc, ctxt, 256, inputs, outputs);
 }
 
 void
-SubBytes(GarbledCircuit *gc, GarblingContext *ctxt, const int inputs[8],
+SubBytes(garble_circuit *gc, garble_context *ctxt, const int inputs[8],
          int outputs[8])
 {
     int temp1[8], temp2[8];
@@ -95,7 +95,7 @@ SubBytes(GarbledCircuit *gc, GarblingContext *ctxt, const int inputs[8],
 }
 
 int
-ShiftRows(GarbledCircuit *gc, GarblingContext *ctxt, const int *inputs,
+ShiftRows(garble_circuit *gc, garble_context *ctxt, const int *inputs,
           int *outputs)
 {
 	static int shiftTable[] =
@@ -108,7 +108,7 @@ ShiftRows(GarbledCircuit *gc, GarblingContext *ctxt, const int *inputs,
 }
 
 int
-MixColumns(GarbledCircuit *gc, GarblingContext *ctxt, const int *inputs,
+MixColumns(garble_circuit *gc, garble_context *ctxt, const int *inputs,
            int *outputs)
 {
 	int mulOut[4][8];
@@ -138,7 +138,7 @@ MixColumns(GarbledCircuit *gc, GarblingContext *ctxt, const int *inputs,
 }
 
 static int
-MAP(GarbledCircuit *gc, GarblingContext *ctxt, const int *inputs, int *outputs)
+MAP(garble_circuit *gc, garble_context *ctxt, const int *inputs, int *outputs)
 {
 	unsigned char A = 0;
 	unsigned char B = 1;
@@ -155,27 +155,25 @@ MAP(GarbledCircuit *gc, GarblingContext *ctxt, const int *inputs, int *outputs)
 	for (i = 0; i < 10; i++)
 		tempW[i] = garble_next_wire(ctxt);
 
-	XORGate(gc, ctxt, inputs[1], inputs[7], tempW[A]);
-
-	XORGate(gc, ctxt, inputs[5], inputs[7], tempW[B]);
-
-	XORGate(gc, ctxt, inputs[4], inputs[6], tempW[C]);
+	XORGate(gc, inputs[1], inputs[7], tempW[A]);
+	XORGate(gc, inputs[5], inputs[7], tempW[B]);
+	XORGate(gc, inputs[4], inputs[6], tempW[C]);
 
 	int temp = garble_next_wire(ctxt);
-	XORGate(gc, ctxt, tempW[C], inputs[0], temp);
-	XORGate(gc, ctxt, temp, inputs[5], tempW[L0]);
+	XORGate(gc, tempW[C], inputs[0], temp);
+	XORGate(gc, temp, inputs[5], tempW[L0]);
 
-	XORGate(gc, ctxt, inputs[1], inputs[2], tempW[L1]);
+	XORGate(gc, inputs[1], inputs[2], tempW[L1]);
 
-	XORGate(gc, ctxt, inputs[4], inputs[2], tempW[L3]);
+	XORGate(gc, inputs[4], inputs[2], tempW[L3]);
 
-	XORGate(gc, ctxt, inputs[5], tempW[C], tempW[H0]);
+	XORGate(gc, inputs[5], tempW[C], tempW[H0]);
 
-	XORGate(gc, ctxt, inputs[A], inputs[C], tempW[H1]);
+	XORGate(gc, inputs[A], inputs[C], tempW[H1]);
 
 	int temp2 = garble_next_wire(ctxt);
-	XORGate(gc, ctxt, tempW[B], inputs[2], temp2);
-	XORGate(gc, ctxt, temp2, inputs[3], tempW[H2]);
+	XORGate(gc, tempW[B], inputs[2], temp2);
+	XORGate(gc, temp2, inputs[3], tempW[H2]);
 
 	outputs[0] = tempW[L0];
 	outputs[1] = tempW[L1];
@@ -189,7 +187,7 @@ MAP(GarbledCircuit *gc, GarblingContext *ctxt, const int *inputs, int *outputs)
 }
 
 int
-INVMAP(GarbledCircuit *gc, GarblingContext *ctxt, int* inputs,
+INVMAP(garble_circuit *gc, garble_context *ctxt, int* inputs,
        int* outputs)
 {
 	unsigned char A = 0;
@@ -219,40 +217,40 @@ INVMAP(GarbledCircuit *gc, GarblingContext *ctxt, int* inputs,
 	for (i = 0; i < 16; i++)
 		tempW[i] = garble_next_wire(ctxt);
 
-	XORGate(gc, ctxt, inputs[l1], inputs[h3], tempW[A]);
+	XORGate(gc, inputs[l1], inputs[h3], tempW[A]);
 
-	XORGate(gc, ctxt, inputs[h1], inputs[h0], tempW[B]);
+	XORGate(gc, inputs[h1], inputs[h0], tempW[B]);
 
-	XORGate(gc, ctxt, inputs[l0], inputs[h0], tempW[a0]);
+	XORGate(gc, inputs[l0], inputs[h0], tempW[a0]);
 
-	XORGate(gc, ctxt, inputs[h3], tempW[B], tempW[a1]);
+	XORGate(gc, inputs[h3], tempW[B], tempW[a1]);
 
-	XORGate(gc, ctxt, tempW[A], tempW[B], tempW[a2]);
+	XORGate(gc, tempW[A], tempW[B], tempW[a2]);
 
 	int temp = garble_next_wire(ctxt);
-	XORGate(gc, ctxt, tempW[B], inputs[l1], temp);
+	XORGate(gc, tempW[B], inputs[l1], temp);
 
-	XORGate(gc, ctxt, temp, inputs[h2], tempW[a3]);
-
-	temp = garble_next_wire(ctxt);
-	XORGate(gc, ctxt, tempW[A], tempW[B], temp);
-
-	XORGate(gc, ctxt, inputs[l3], temp, tempW[a4]);
-
-	XORGate(gc, ctxt, inputs[l2], tempW[B], tempW[a5]);
+	XORGate(gc, temp, inputs[h2], tempW[a3]);
 
 	temp = garble_next_wire(ctxt);
-	XORGate(gc, ctxt, tempW[A], inputs[l2], temp);
+	XORGate(gc, tempW[A], tempW[B], temp);
+
+	XORGate(gc, inputs[l3], temp, tempW[a4]);
+
+	XORGate(gc, inputs[l2], tempW[B], tempW[a5]);
+
+	temp = garble_next_wire(ctxt);
+	XORGate(gc, tempW[A], inputs[l2], temp);
 
 	int temp2 = garble_next_wire(ctxt);
-	XORGate(gc, ctxt, temp, inputs[l3], temp2);
-	XORGate(gc, ctxt, temp2, inputs[h0], tempW[a6]);
+	XORGate(gc, temp, inputs[l3], temp2);
+	XORGate(gc, temp2, inputs[h0], tempW[a6]);
 
 	temp2 = garble_next_wire(ctxt);
 
-	XORGate(gc, ctxt, tempW[B], inputs[l2], temp2);
+	XORGate(gc, tempW[B], inputs[l2], temp2);
 
-	XORGate(gc, ctxt, temp2, inputs[h3], tempW[a7]);
+	XORGate(gc, temp2, inputs[h3], tempW[a7]);
 
 	outputs[0] = tempW[a0];
 	outputs[1] = tempW[a1];
@@ -267,7 +265,7 @@ INVMAP(GarbledCircuit *gc, GarblingContext *ctxt, int* inputs,
 }
 
 int
-MULTGF16(GarbledCircuit *gc, GarblingContext *ctxt, int* inputs,
+MULTGF16(garble_circuit *gc, garble_context *ctxt, int* inputs,
          int* outputs)
 {
 	unsigned char A = 0;
@@ -309,77 +307,59 @@ MULTGF16(GarbledCircuit *gc, GarblingContext *ctxt, int* inputs,
 	for (i = 0; i < 24; i++)
 		tempW[i] = garble_next_wire(ctxt);
 
-	XORGate(gc, ctxt, inputs[a3], inputs[a0], tempW[A]);
+	XORGate(gc, inputs[a3], inputs[a0], tempW[A]);
 
-	XORGate(gc, ctxt, inputs[a3], inputs[a2], tempW[B]);
+	XORGate(gc, inputs[a3], inputs[a2], tempW[B]);
 
-	XORGate(gc, ctxt, inputs[a1], inputs[a2], tempW[C]);
+	XORGate(gc, inputs[a1], inputs[a2], tempW[C]);
 
-	ANDGate(gc, ctxt, inputs[a0], inputs[b0], tempW[and00]);
+	ANDGate(gc, inputs[a0], inputs[b0], tempW[and00]);
 
-	ANDGate(gc, ctxt, inputs[a3], inputs[b1], tempW[and31]);
+	ANDGate(gc, inputs[a3], inputs[b1], tempW[and31]);
 
-	ANDGate(gc, ctxt, inputs[a2], inputs[b2], tempW[and22]);
+	ANDGate(gc, inputs[a2], inputs[b2], tempW[and22]);
 
-	ANDGate(gc, ctxt, inputs[a1], inputs[b3], tempW[and13]);
+	ANDGate(gc, inputs[a1], inputs[b3], tempW[and13]);
 
 	int temp1 = garble_next_wire(ctxt);
 	int temp2 = garble_next_wire(ctxt);
-	XORGate(gc, ctxt, tempW[and00], tempW[and31], temp1);
+	XORGate(gc, tempW[and00], tempW[and31], temp1);
 
-	XORGate(gc, ctxt, tempW[and13], tempW[and22], temp2);
-	XORGate(gc, ctxt, temp1, temp2, tempW[q0]);
-
-	ANDGate(gc, ctxt, inputs[a1], inputs[b0], tempW[and10]);
-
-	ANDGate(gc, ctxt, tempW[A], inputs[b1], tempW[andA1]);
-
-	ANDGate(gc, ctxt, tempW[B], inputs[b2], tempW[andB2]);
-
-	ANDGate(gc, ctxt, tempW[C], inputs[b3], tempW[andC3]);
+	XORGate(gc, tempW[and13], tempW[and22], temp2);
+	XORGate(gc, temp1, temp2, tempW[q0]);
+	ANDGate(gc, inputs[a1], inputs[b0], tempW[and10]);
+	ANDGate(gc, tempW[A], inputs[b1], tempW[andA1]);
+	ANDGate(gc, tempW[B], inputs[b2], tempW[andB2]);
+	ANDGate(gc, tempW[C], inputs[b3], tempW[andC3]);
 
 	temp1 = garble_next_wire(ctxt);
 	temp2 = garble_next_wire(ctxt);
 
-	XORGate(gc, ctxt, tempW[and10], tempW[andA1], temp1);
-
-	XORGate(gc, ctxt, tempW[andB2], tempW[andC3], temp2);
-
-	XORGate(gc, ctxt, temp1, temp2, tempW[q1]);
-
-	ANDGate(gc, ctxt, inputs[a2], inputs[b0], tempW[and20]);
-
-	ANDGate(gc, ctxt, inputs[a1], inputs[b1], tempW[and11]);
-
-	ANDGate(gc, ctxt, tempW[A], inputs[b2], tempW[andA2]);
-
-	ANDGate(gc, ctxt, tempW[B], inputs[b3], tempW[andB3]);
+	XORGate(gc, tempW[and10], tempW[andA1], temp1);
+	XORGate(gc, tempW[andB2], tempW[andC3], temp2);
+	XORGate(gc, temp1, temp2, tempW[q1]);
+	ANDGate(gc, inputs[a2], inputs[b0], tempW[and20]);
+	ANDGate(gc, inputs[a1], inputs[b1], tempW[and11]);
+	ANDGate(gc, tempW[A], inputs[b2], tempW[andA2]);
+	ANDGate(gc, tempW[B], inputs[b3], tempW[andB3]);
 
 	temp1 = garble_next_wire(ctxt);
 	temp2 = garble_next_wire(ctxt);
 
-	XORGate(gc, ctxt, tempW[and20], tempW[and11], temp1);
-
-	XORGate(gc, ctxt, tempW[andA2], tempW[andB3], temp2);
-
-	XORGate(gc, ctxt, temp1, temp2, tempW[q2]);
-
-	ANDGate(gc, ctxt, inputs[a3], inputs[b0], tempW[and30]);
-
-	ANDGate(gc, ctxt, inputs[a2], inputs[b1], tempW[and21]);
-
-	ANDGate(gc, ctxt, inputs[a1], inputs[b2], tempW[and12]);
-
-	ANDGate(gc, ctxt, tempW[A], inputs[b3], tempW[andA3]);
+	XORGate(gc, tempW[and20], tempW[and11], temp1);
+	XORGate(gc, tempW[andA2], tempW[andB3], temp2);
+	XORGate(gc, temp1, temp2, tempW[q2]);
+	ANDGate(gc, inputs[a3], inputs[b0], tempW[and30]);
+	ANDGate(gc, inputs[a2], inputs[b1], tempW[and21]);
+	ANDGate(gc, inputs[a1], inputs[b2], tempW[and12]);
+	ANDGate(gc, tempW[A], inputs[b3], tempW[andA3]);
 
 	temp1 = garble_next_wire(ctxt);
 	temp2 = garble_next_wire(ctxt);
 
-	XORGate(gc, ctxt, tempW[and30], tempW[and21], temp1);
-
-	XORGate(gc, ctxt, tempW[andA3], tempW[and12], temp2);
-
-	XORGate(gc, ctxt, temp1, temp2, tempW[q3]);
+	XORGate(gc, tempW[and30], tempW[and21], temp1);
+	XORGate(gc, tempW[andA3], tempW[and12], temp2);
+	XORGate(gc, temp1, temp2, tempW[q3]);
 
 	outputs[0] = tempW[q0];
 	outputs[1] = tempW[q1];
@@ -390,22 +370,22 @@ MULTGF16(GarbledCircuit *gc, GarblingContext *ctxt, int* inputs,
 }
 
 int
-SquareCircuit(GarbledCircuit *gc,
-              GarblingContext *ctxt, int n, int* inputs, int* outputs)
+SquareCircuit(garble_circuit *gc,
+              garble_context *ctxt, int n, int* inputs, int* outputs)
 {
 	outputs[0] = garble_next_wire(ctxt);
-	XORGate(gc, ctxt, inputs[0], inputs[2], outputs[0]);
+	XORGate(gc, inputs[0], inputs[2], outputs[0]);
 
 	outputs[1] = inputs[2];
 	outputs[2] = garble_next_wire(ctxt);
-	XORGate(gc, ctxt, inputs[1], inputs[3], outputs[2]);
+	XORGate(gc, inputs[1], inputs[3], outputs[2]);
 
 	outputs[3] = inputs[3];
 	return 0;
 }
 
 int
-MULTE_GF16(GarbledCircuit *gc, GarblingContext *ctxt,
+MULTE_GF16(garble_circuit *gc, garble_context *ctxt,
            int* inputs, int* outputs)
 {
 	int outputA = garble_next_wire(ctxt);
@@ -414,11 +394,11 @@ MULTE_GF16(GarbledCircuit *gc, GarblingContext *ctxt,
 	int outputq2 = garble_next_wire(ctxt);
 	int outputq3 = garble_next_wire(ctxt);
 
-	XORGate(gc, ctxt, inputs[0], inputs[1], outputA);
-	XORGate(gc, ctxt, inputs[2], inputs[3], outputB);
-	XORGate(gc, ctxt, outputB, inputs[1], outputq0);
-	XORGate(gc, ctxt, outputA, inputs[2], outputq2);
-	XORGate(gc, ctxt, outputB, outputA, outputq3);
+	XORGate(gc, inputs[0], inputs[1], outputA);
+	XORGate(gc, inputs[2], inputs[3], outputB);
+	XORGate(gc, outputB, inputs[1], outputq0);
+	XORGate(gc, outputA, inputs[2], outputq2);
+	XORGate(gc, outputB, outputA, outputq3);
 
 	outputs[0] = outputq0;
 	outputs[1] = outputA;
@@ -429,7 +409,7 @@ MULTE_GF16(GarbledCircuit *gc, GarblingContext *ctxt,
 }
 
 int
-INV_GF16(GarbledCircuit *gc, GarblingContext *ctxt, const int *inputs,
+INV_GF16(garble_circuit *gc, garble_context *ctxt, const int *inputs,
          int *outputs)
 {
 	int AOutput = garble_next_wire(ctxt);
@@ -449,31 +429,31 @@ INV_GF16(GarbledCircuit *gc, GarblingContext *ctxt, const int *inputs,
 	int and023Output = garble_next_wire(ctxt);
 	int and013Output = garble_next_wire(ctxt);
 
-	ANDGate(gc, ctxt, inputs[0], inputs[1], and01Output);
-	ANDGate(gc, ctxt, inputs[0], inputs[2], and02Output);
-	ANDGate(gc, ctxt, inputs[0], inputs[3], and03Output);
-	ANDGate(gc, ctxt, inputs[2], inputs[1], and12Output);
-	ANDGate(gc, ctxt, inputs[3], inputs[1], and13Output);
-	ANDGate(gc, ctxt, inputs[2], inputs[3], and23Output);
-	ANDGate(gc, ctxt, inputs[2], and01Output, and012Output);
-	ANDGate(gc, ctxt, inputs[3], and12Output, and123Output);
-	ANDGate(gc, ctxt, inputs[3], and02Output, and023Output);
-	ANDGate(gc, ctxt, inputs[3], and01Output, and013Output);
+	ANDGate(gc, inputs[0], inputs[1], and01Output);
+	ANDGate(gc, inputs[0], inputs[2], and02Output);
+	ANDGate(gc, inputs[0], inputs[3], and03Output);
+	ANDGate(gc, inputs[2], inputs[1], and12Output);
+	ANDGate(gc, inputs[3], inputs[1], and13Output);
+	ANDGate(gc, inputs[2], inputs[3], and23Output);
+	ANDGate(gc, inputs[2], and01Output, and012Output);
+	ANDGate(gc, inputs[3], and12Output, and123Output);
+	ANDGate(gc, inputs[3], and02Output, and023Output);
+	ANDGate(gc, inputs[3], and01Output, and013Output);
 
 	int tempXORA1 = garble_next_wire(ctxt);
-	XORGate(gc, ctxt, inputs[1], inputs[2], tempXORA1);
+	XORGate(gc, inputs[1], inputs[2], tempXORA1);
 	int tempXORA2 = garble_next_wire(ctxt);
-	XORGate(gc, ctxt, inputs[3], and123Output, tempXORA2);
-	XORGate(gc, ctxt, tempXORA1, tempXORA2, AOutput);
+	XORGate(gc, inputs[3], and123Output, tempXORA2);
+	XORGate(gc, tempXORA1, tempXORA2, AOutput);
 
 	int tempXORq01 = garble_next_wire(ctxt);
 	int tempXORq02 = garble_next_wire(ctxt);
 	int tempXORq03 = garble_next_wire(ctxt);
 
-	XORGate(gc, ctxt, inputs[0], AOutput, tempXORq01);
-	XORGate(gc, ctxt, and02Output, tempXORq01, tempXORq02);
-	XORGate(gc, ctxt, and12Output, tempXORq02, tempXORq03);
-	XORGate(gc, ctxt, and012Output, tempXORq03, q0Output);
+	XORGate(gc, inputs[0], AOutput, tempXORq01);
+	XORGate(gc, and02Output, tempXORq01, tempXORq02);
+	XORGate(gc, and12Output, tempXORq02, tempXORq03);
+	XORGate(gc, and012Output, tempXORq03, q0Output);
 
 	int tempXORq11 = garble_next_wire(ctxt);
 	int tempXORq12 = garble_next_wire(ctxt);
@@ -481,11 +461,11 @@ INV_GF16(GarbledCircuit *gc, GarblingContext *ctxt, const int *inputs,
 	int tempXORq14 = garble_next_wire(ctxt);
 	/* int tempXORq15 = */ garble_next_wire(ctxt);
 
-	XORGate(gc, ctxt, and01Output, and02Output, tempXORq11);
-	XORGate(gc, ctxt, and12Output, tempXORq11, tempXORq12);
-	XORGate(gc, ctxt, inputs[3], tempXORq12, tempXORq13);
-	XORGate(gc, ctxt, and13Output, tempXORq13, tempXORq14);
-	XORGate(gc, ctxt, and013Output, tempXORq14, q1Output);
+	XORGate(gc, and01Output, and02Output, tempXORq11);
+	XORGate(gc, and12Output, tempXORq11, tempXORq12);
+	XORGate(gc, inputs[3], tempXORq12, tempXORq13);
+	XORGate(gc, and13Output, tempXORq13, tempXORq14);
+	XORGate(gc, and013Output, tempXORq14, q1Output);
 
 	int tempXORq21 = garble_next_wire(ctxt);
 	int tempXORq22 = garble_next_wire(ctxt);
@@ -493,11 +473,11 @@ INV_GF16(GarbledCircuit *gc, GarblingContext *ctxt, const int *inputs,
 	int tempXORq24 = garble_next_wire(ctxt);
 	/* int tempXORq25 = */ garble_next_wire(ctxt);
 
-	XORGate(gc, ctxt, and01Output, inputs[2], tempXORq21);
-	XORGate(gc, ctxt, and02Output, tempXORq21, tempXORq22);
-	XORGate(gc, ctxt, inputs[3], tempXORq22, tempXORq23);
-	XORGate(gc, ctxt, and03Output, tempXORq23, tempXORq24);
-	XORGate(gc, ctxt, and023Output, tempXORq24, q2Output);
+	XORGate(gc, and01Output, inputs[2], tempXORq21);
+	XORGate(gc, and02Output, tempXORq21, tempXORq22);
+	XORGate(gc, inputs[3], tempXORq22, tempXORq23);
+	XORGate(gc, and03Output, tempXORq23, tempXORq24);
+	XORGate(gc, and023Output, tempXORq24, q2Output);
 
 	int tempXORq31 = garble_next_wire(ctxt);
 	int tempXORq32 = garble_next_wire(ctxt);
@@ -505,9 +485,9 @@ INV_GF16(GarbledCircuit *gc, GarblingContext *ctxt, const int *inputs,
 	/* int tempXORq34 = */ garble_next_wire(ctxt);
 	/* int tempXORq35 = */ garble_next_wire(ctxt);
 
-	XORGate(gc, ctxt, AOutput, and03Output, tempXORq31);
-	XORGate(gc, ctxt, and13Output, tempXORq31, tempXORq32);
-	XORGate(gc, ctxt, and23Output, tempXORq32, q3Output);
+	XORGate(gc, AOutput, and03Output, tempXORq31);
+	XORGate(gc, and13Output, tempXORq31, tempXORq32);
+	XORGate(gc, and23Output, tempXORq32, q3Output);
 
 	outputs[0] = q0Output;
 	outputs[1] = q1Output;
@@ -518,7 +498,7 @@ INV_GF16(GarbledCircuit *gc, GarblingContext *ctxt, const int *inputs,
 }
 
 int
-AFFINE(GarbledCircuit *gc, GarblingContext *ctxt, const int *inputs,
+AFFINE(garble_circuit *gc, garble_context *ctxt, const int *inputs,
        int *outputs)
 {
 	int AOutput = garble_next_wire(ctxt);
@@ -540,46 +520,46 @@ AFFINE(GarbledCircuit *gc, GarblingContext *ctxt, const int *inputs,
 	int a5barOutput = garble_next_wire(ctxt);
 	int a6barOutput = garble_next_wire(ctxt);
 
-	XORGate(gc, ctxt, inputs[0], inputs[1], AOutput);
-	XORGate(gc, ctxt, inputs[2], inputs[3], BOutput);
-	XORGate(gc, ctxt, inputs[4], inputs[5], COutput);
-	XORGate(gc, ctxt, inputs[6], inputs[7], DOutput);
-	NOTGate(gc, ctxt, inputs[0], a0barOutput);
-	NOTGate(gc, ctxt, inputs[1], a1barOutput);
-	NOTGate(gc, ctxt, inputs[5], a5barOutput);
-	NOTGate(gc, ctxt, inputs[6], a6barOutput);
+	XORGate(gc, inputs[0], inputs[1], AOutput);
+	XORGate(gc, inputs[2], inputs[3], BOutput);
+	XORGate(gc, inputs[4], inputs[5], COutput);
+	XORGate(gc, inputs[6], inputs[7], DOutput);
+	NOTGate(gc, inputs[0], a0barOutput);
+	NOTGate(gc, inputs[1], a1barOutput);
+	NOTGate(gc, inputs[5], a5barOutput);
+	NOTGate(gc, inputs[6], a6barOutput);
 
 	int tempWireq0 = garble_next_wire(ctxt);
-	XORGate(gc, ctxt, a0barOutput, COutput, tempWireq0);
-	XORGate(gc, ctxt, tempWireq0, DOutput, q0Output);
+	XORGate(gc, a0barOutput, COutput, tempWireq0);
+	XORGate(gc, tempWireq0, DOutput, q0Output);
 
 	int tempWireq1 = garble_next_wire(ctxt);
-	XORGate(gc, ctxt, a5barOutput, AOutput, tempWireq1);
-	XORGate(gc, ctxt, tempWireq1, DOutput, q1Output);
+	XORGate(gc, a5barOutput, AOutput, tempWireq1);
+	XORGate(gc, tempWireq1, DOutput, q1Output);
 
 	int tempWireq2 = garble_next_wire(ctxt);
-	XORGate(gc, ctxt, inputs[2], AOutput, tempWireq2);
-	XORGate(gc, ctxt, tempWireq2, DOutput, q2Output);
+	XORGate(gc, inputs[2], AOutput, tempWireq2);
+	XORGate(gc, tempWireq2, DOutput, q2Output);
 
 	int tempWireq3 = garble_next_wire(ctxt);
-	XORGate(gc, ctxt, inputs[7], AOutput, tempWireq3);
-	XORGate(gc, ctxt, tempWireq3, BOutput, q3Output);
+	XORGate(gc, inputs[7], AOutput, tempWireq3);
+	XORGate(gc, tempWireq3, BOutput, q3Output);
 
 	int tempWireq4 = garble_next_wire(ctxt);
-	XORGate(gc, ctxt, inputs[4], AOutput, tempWireq4);
-	XORGate(gc, ctxt, tempWireq4, BOutput, q4Output);
+	XORGate(gc, inputs[4], AOutput, tempWireq4);
+	XORGate(gc, tempWireq4, BOutput, q4Output);
 
 	int tempWireq5 = garble_next_wire(ctxt);
-	XORGate(gc, ctxt, a1barOutput, BOutput, tempWireq5);
-	XORGate(gc, ctxt, tempWireq5, COutput, q5Output);
+	XORGate(gc, a1barOutput, BOutput, tempWireq5);
+	XORGate(gc, tempWireq5, COutput, q5Output);
 
 	int tempWireq6 = garble_next_wire(ctxt);
-	XORGate(gc, ctxt, a6barOutput, BOutput, tempWireq6);
-	XORGate(gc, ctxt, tempWireq6, COutput, q6Output);
+	XORGate(gc, a6barOutput, BOutput, tempWireq6);
+	XORGate(gc, tempWireq6, COutput, q6Output);
 
 	int tempWireq7 = garble_next_wire(ctxt);
-	XORGate(gc, ctxt, inputs[3], COutput, tempWireq7);
-	XORGate(gc, ctxt, tempWireq7, DOutput, q7Output);
+	XORGate(gc, inputs[3], COutput, tempWireq7);
+	XORGate(gc, tempWireq7, DOutput, q7Output);
 
 	outputs[0] = q0Output;
 	outputs[1] = q1Output;
@@ -594,7 +574,7 @@ AFFINE(GarbledCircuit *gc, GarblingContext *ctxt, const int *inputs,
 }
 
 static int
-INV_GF256(GarbledCircuit *gc, GarblingContext *ctxt, const int *inputs,
+INV_GF256(garble_circuit *gc, garble_context *ctxt, const int *inputs,
           int *outputs)
 {
 	int i;
@@ -703,7 +683,7 @@ INV_GF256(GarbledCircuit *gc, GarblingContext *ctxt, const int *inputs,
 }
 
 int
-SBOXNOTABLE(GarbledCircuit *gc, GarblingContext *ctxt, const int *inputs,
+SBOXNOTABLE(garble_circuit *gc, garble_context *ctxt, const int *inputs,
             int *outputs)
 {
 	int invInputs[8];
