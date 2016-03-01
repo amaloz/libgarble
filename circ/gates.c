@@ -60,9 +60,9 @@ int
 garble_gate_zero(garble_circuit *gc, garble_context *ctxt)
 {
     int ind = garble_next_wire(ctxt);
-    gc->fixedWires[gc->nFixedWires].type = GARBLE_FIXED_WIRE_ZERO;
-    gc->fixedWires[gc->nFixedWires].idx = ind;
-    gc->nFixedWires++;
+    gc->fixed_wires[gc->n_fixed_wires].type = GARBLE_FIXED_WIRE_ZERO;
+    gc->fixed_wires[gc->n_fixed_wires].idx = ind;
+    gc->n_fixed_wires++;
     return ind;
 
 }
@@ -70,8 +70,8 @@ int
 garble_gate_one(garble_circuit *gc, garble_context *ctxt)
 {
     int ind = garble_next_wire(ctxt);
-    gc->fixedWires[gc->nFixedWires].type = GARBLE_FIXED_WIRE_ONE;
-    gc->fixedWires[gc->nFixedWires].idx = ind;
-    gc->nFixedWires++;
+    gc->fixed_wires[gc->n_fixed_wires].type = GARBLE_FIXED_WIRE_ONE;
+    gc->fixed_wires[gc->n_fixed_wires].idx = ind;
+    gc->n_fixed_wires++;
     return ind;
 }

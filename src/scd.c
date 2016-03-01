@@ -33,7 +33,7 @@ fsize(const char *filename)
 
 	if (stat(filename, &st) == 0)
 		return st.st_size;
-	return -1;
+	return 0;
 }
 
 int
@@ -51,22 +51,22 @@ garble_to_file(garble_circuit *gc, char *fname)
 	pk = msgpack_packer_new(buffer, msgpack_sbuffer_write);
 	msgpack_sbuffer_clear(buffer);
 
-	msgpack_pack_array(pk, 4 + 4 * gc->q + 2 * gc->nFixedWires + gc->m);
+	msgpack_pack_array(pk, 4 + 4 * gc->q + 2 * gc->n_fixed_wires + gc->m);
 	msgpack_pack_int(pk, gc->n);
 	msgpack_pack_int(pk, gc->m);
 	msgpack_pack_int(pk, gc->q);
-    msgpack_pack_int(pk, gc->nFixedWires);
-	for (int i = 0; i < gc->q; ++i) {
+    msgpack_pack_int(pk, gc->n_fixed_wires);
+	for (uint64_t i = 0; i < gc->q; ++i) {
 		msgpack_pack_int(pk, gc->gates[i].input0);
         msgpack_pack_int(pk, gc->gates[i].input1);
         msgpack_pack_int(pk, gc->gates[i].output);
         msgpack_pack_int(pk, gc->gates[i].type);
 	}
-	for (int i = 0; i < gc->nFixedWires; ++i) {
-		msgpack_pack_int(pk, gc->fixedWires[i].type);
-        msgpack_pack_int(pk, gc->fixedWires[i].idx);
+	for (uint64_t i = 0; i < gc->n_fixed_wires; ++i) {
+		msgpack_pack_int(pk, gc->fixed_wires[i].type);
+        msgpack_pack_int(pk, gc->fixed_wires[i].idx);
 	}
-	for (int i = 0; i < gc->m; ++i) {
+	for (uint64_t i = 0; i < gc->m; ++i) {
 		msgpack_pack_int(pk, gc->outputs[i]);
 	}
 	fwrite(buffer->data, sizeof(char), buffer->size, f);
@@ -87,7 +87,7 @@ garble_from_file(garble_circuit *gc, char *fname)
 
 	msgpack_sbuffer_init(&buffer);
 
-	if ((buffer.size = fsize(fname)) == -1)
+	if ((buffer.size = fsize(fname)) == 0)
         goto cleanup;
 	if ((f = fopen(fname, "rb")) == NULL) {
         perror("fopen");
@@ -104,29 +104,26 @@ garble_from_file(garble_circuit *gc, char *fname)
 	gc->n = (*p++).via.i64;
 	gc->m = (*p++).via.i64;
 	gc->q = (*p++).via.i64;
-    gc->nFixedWires = (*p++).via.i64;
-    gc->r = gc->n + gc->q + gc->nFixedWires;
+    gc->n_fixed_wires = (*p++).via.i64;
+    gc->r = gc->n + gc->q + gc->n_fixed_wires;
 
     gc->gates = calloc(gc->q, sizeof(garble_gate));
-    gc->garbledTable = calloc(gc->q, sizeof(garble_table));
+    gc->table = calloc(gc->q, garble_table_size(gc));
     gc->wires = calloc(gc->r, sizeof(garble_wire));
     gc->outputs = calloc(gc->m, sizeof(int));
-    gc->fixedWires = calloc(gc->nFixedWires, sizeof(garble_fixed_wire));
-	if (gc->outputs == NULL || gc->gates == NULL || gc->garbledTable == NULL
-        || gc->wires == NULL || gc->fixedWires == NULL) {
-		return -1;
-	}
-	for (int i = 0; i < gc->q; ++i) {
+    gc->fixed_wires = calloc(gc->n_fixed_wires, sizeof(garble_fixed_wire));
+
+	for (uint64_t i = 0; i < gc->q; ++i) {
 		gc->gates[i].input0 = (*p++).via.i64;
         gc->gates[i].input1 = (*p++).via.i64;
         gc->gates[i].output = (*p++).via.i64;
         gc->gates[i].type = (*p++).via.i64;
 	}
-    for (int i = 0; i < gc->nFixedWires; ++i) {
-        gc->fixedWires[i].type = (*p++).via.i64;
-        gc->fixedWires[i].idx = (*p++).via.i64;
+    for (uint64_t i = 0; i < gc->n_fixed_wires; ++i) {
+        gc->fixed_wires[i].type = (*p++).via.i64;
+        gc->fixed_wires[i].idx = (*p++).via.i64;
     }
-	for (int i = 0; i < gc->m; ++i) {
+	for (uint64_t i = 0; i < gc->m; ++i) {
 		gc->outputs[i] = (*p++).via.i64;
 	}
     msgpack_unpacked_destroy(&msg);

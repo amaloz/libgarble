@@ -24,6 +24,7 @@
 #include "garble/block.h"
 
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <openssl/sha.h>
 
@@ -45,19 +46,14 @@ typedef enum {
     GARBLE_GATE_EMPTY = -1,
 } garble_gate_type_e;
 
-
 typedef struct {
 	block label0, label1;
 } garble_wire;
 
 typedef struct {
     garble_gate_type_e type;
-	long input0, input1, output;
+	uint64_t input0, input1, output;
 } garble_gate;
-
-typedef struct {
-	block table[3];
-} garble_table;
 
 typedef enum {
     GARBLE_FIXED_WIRE_ZERO = 0,
@@ -70,45 +66,64 @@ typedef struct {
 } garble_fixed_wire;
 
 typedef struct {
-	int n, m, q, r, nFixedWires;
-	garble_gate *gates;            /* q */
-	garble_table *garbledTable;    /* q */
-	garble_wire *wires;            /* r */
-    garble_fixed_wire *fixedWires; /* <= r */
-	int *outputs;                  /* m */
-    block fixedLabel;
-	block globalKey;
+    uint64_t n, m, q, r, n_fixed_wires;
+    garble_type_e type;
+    garble_gate *gates;         /* q */
+    block *table;               /* q */
+    garble_wire *wires;         /* r */
+    garble_fixed_wire *fixed_wires; /* <= r */
+    int *outputs;                   /* m */
+    block fixed_label;
+    block global_key;
 } garble_circuit;
 
-/* Used for constructing a circuit, and not for garbling as the name suggests */
+inline
+size_t garble_table_size(const garble_circuit *gc)
+{
+    switch(gc->type) {
+    case GARBLE_TYPE_STANDARD:
+        return 3 * sizeof(block);
+    case GARBLE_TYPE_HALFGATES:
+        return 2 * sizeof(block);
+    }
+    return 0;
+}
+
 typedef struct {
-	long wireIndex;
+	uint64_t wire_index;
 } garble_context;
 
 int
-garble_garble(garble_circuit *gc, const block *inputLabels, block *outputLabels,
-              garble_type_e type);
+garble_new(garble_circuit *gc, uint64_t n, uint64_t m, uint64_t q, uint64_t r,
+           garble_type_e type);
 void
-garble_hash(const garble_circuit *gc,
-            unsigned char hash[SHA_DIGEST_LENGTH],
-            garble_type_e type);
+garble_delete(garble_circuit *gc);
+
+void
+garble_start_building(garble_circuit *gc, garble_context *ctxt);
+void
+garble_finish_building(garble_circuit *gc, const int *outputs);
+
 int
-garble_check(garble_circuit *gc,
-             const unsigned char hash[SHA_DIGEST_LENGTH],
-             garble_type_e type);
+garble_garble(garble_circuit *gc, const block *inputs, block *outputs);
+
+void
+garble_hash(const garble_circuit *gc, unsigned char hash[SHA_DIGEST_LENGTH]);
+int
+garble_check(garble_circuit *gc, const unsigned char hash[SHA_DIGEST_LENGTH]);
 block
 garble_create_delta(void);
 void
-garble_create_input_labels(block *labels, int n, block *delta);
+garble_create_input_labels(block *labels, uint64_t n, block *delta);
 
 int
-garble_eval(const garble_circuit *gc, const block *inputs, block *outputs,
-            garble_type_e type);
+garble_eval(const garble_circuit *gc, const block *inputs, block *outputs);
 void
-garble_extract_labels(block *extracted, const block *labels, const int *bits,
-                      long n);
+garble_extract_labels(block *extracted, const block *labels, const bool *bits,
+                      uint64_t n);
 int
-garble_map_outputs(const block *outputs, const block *map, int *vals, int m);
+garble_map_outputs(const block *outputs, const block *map, bool *vals,
+                   uint64_t m);
 
 int
 garble_to_file(garble_circuit *gc, char *fname);
@@ -117,16 +132,6 @@ garble_from_file(garble_circuit *gc, char *fname);
 
 int
 garble_next_wire(garble_context *ctxt);
-
-void
-garble_start_building(garble_circuit *gc, garble_context *ctxt);
-void
-garble_finish_building(garble_circuit *gc, const int *outputs);
-
-int
-garble_new(garble_circuit *gc, int n, int m, int q, int r);
-void
-garble_delete(garble_circuit *gc);
 
 size_t
 garble_size(const garble_circuit *gc, bool wires);

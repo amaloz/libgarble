@@ -4,16 +4,16 @@
 #include "garble.h"
 
 void
-ANDGate(garble_circuit *gc, int input0, int input1, int output);
+garble_gate_AND(garble_circuit *gc, int input0, int input1, int output);
 void
-ORGate(garble_circuit *gc, int input0, int input1, int output);
+garble_gate_OR(garble_circuit *gc, int input0, int input1, int output);
 void
-XORGate(garble_circuit *gc, int input0, int input1, int output);
+garble_gate_XOR(garble_circuit *gc, int input0, int input1, int output);
 void
-NOTGate(garble_circuit *gc, int input0, int output);
+garble_gate_NOT(garble_circuit *gc, int input0, int output);
 int
-fixedZeroWire(garble_circuit *gc, garble_context *ctxt);
+garble_gate_zero(garble_circuit *gc, garble_context *ctxt);
 int
-fixedOneWire(garble_circuit *gc, garble_context *ctxt);
+garble_gate_one(garble_circuit *gc, garble_context *ctxt);
 
-#endif /* GATES_H_ */
+#endif

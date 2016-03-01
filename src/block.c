@@ -25,22 +25,20 @@ garble_seed(block *seed)
     return cur_seed;
 }
 
-#define AES(out, sched)                                          \
-    {                                                                   \
-        int jx;                                                         \
-        out = _mm_xor_si128(out, sched[0]);                             \
-        for (jx = 1; jx < 10; jx++)                                     \
-            out = _mm_aesenc_si128(out, sched[jx]);                     \
-        out = _mm_aesenclast_si128(out, sched[jx]);                     \
-    }
-
 inline block
 garble_random_block(void)
 {
-    block out = garble_zero_block();
-    ((uint64_t *) &out)[0] = current_rand_index++;
-    AES(out, rand_aes_key.rd_key);
-    return out;
+    block out;
+    uint64_t *val;
+    int i;
+
+    out = garble_zero_block();
+    val = (uint64_t *) &out;
+    val[0] = current_rand_index++;
+    out = _mm_xor_si128(out, rand_aes_key.rd_key[0]);
+    for (i = 1; i < 10; ++i)
+        out = _mm_aesenc_si128(out, rand_aes_key.rd_key[i]);
+    return _mm_aesenclast_si128(out, rand_aes_key.rd_key[i]);
 }
 
 block *

@@ -53,7 +53,7 @@ hash2(block *A, block *B, block tweak1, block tweak2,
 static void
 _eval_halfgates(const garble_circuit *gc, block *labels, const AES_KEY *K)
 {
-	for (long i = 0; i < gc->q; i++) {
+	for (uint64_t i = 0; i < gc->q; i++) {
 		garble_gate *g = &gc->gates[i];
 		if (g->type == GARBLE_GATE_XOR) {
 			labels[g->output] =
@@ -66,7 +66,7 @@ _eval_halfgates(const garble_circuit *gc, block *labels, const AES_KEY *K)
             tweak = garble_make_block(2 * i, (long) 0);
             pa = garble_lsb(A);
             hash1(&A, tweak, K);
-            labels[g->output] = garble_xor(A, gc->garbledTable[i].table[pa]);
+            labels[g->output] = garble_xor(A, gc->table[2 * i + pa]);
         } else {
             block A, B, W;
             int sa, sb;
@@ -85,9 +85,9 @@ _eval_halfgates(const garble_circuit *gc, block *labels, const AES_KEY *K)
 
             W = garble_xor(A, B);
             if (sa)
-                W = garble_xor(W, gc->garbledTable[i].table[0]);
+                W = garble_xor(W, gc->table[2 * i]);
             if (sb) {
-                W = garble_xor(W, gc->garbledTable[i].table[1]);
+                W = garble_xor(W, gc->table[2 * i + 1]);
                 W = garble_xor(W, labels[g->input0]);
             }
             labels[g->output] = W;
@@ -98,7 +98,7 @@ _eval_halfgates(const garble_circuit *gc, block *labels, const AES_KEY *K)
 static void
 _eval_standard(const garble_circuit *gc, block *labels, AES_KEY *key)
 {
-	for (long i = 0; i < gc->q; i++) {
+	for (uint64_t i = 0; i < gc->q; i++) {
 		garble_gate *g = &gc->gates[i];
 		if (g->type == GARBLE_GATE_XOR) {
 			labels[g->output] = garble_xor(labels[g->input0], labels[g->input1]);
@@ -114,7 +114,7 @@ _eval_standard(const garble_circuit *gc, block *labels, AES_KEY *key)
 
             tweak = garble_make_block(i, (long) 0);
             val = garble_xor(garble_xor(A, B), tweak);
-            tmp = a + b ? garble_xor(gc->garbledTable[i].table[2*a+b-1], val) : val;
+            tmp = a + b ? garble_xor(gc->table[3 * i + 2*a+b-1], val) : val;
             AES_ecb_encrypt_blks(&val, 1, key);
 
             labels[g->output] = garble_xor(val, tmp);
@@ -123,8 +123,7 @@ _eval_standard(const garble_circuit *gc, block *labels, AES_KEY *key)
 }
 
 int
-garble_eval(const garble_circuit *gc, const block *inputs, block *outputs,
-            garble_type_e type)
+garble_eval(const garble_circuit *gc, const block *inputs, block *outputs)
 {
     AES_KEY key;
     block *labels;
@@ -132,21 +131,21 @@ garble_eval(const garble_circuit *gc, const block *inputs, block *outputs,
     if (gc == NULL)
         return GARBLE_ERR;
 
-	AES_set_encrypt_key(gc->globalKey, &key);
+	AES_set_encrypt_key(gc->global_key, &key);
     labels = garble_allocate_blocks(gc->r);
 
     /* Set input wire labels */
-	for (long i = 0; i < gc->n; ++i) {
+	for (uint64_t i = 0; i < gc->n; ++i) {
         labels[i] = inputs[i];
 	}
 
     /* Set fixed wire labels */
-    for (int i = 0; i < gc->nFixedWires; ++i) {
-        labels[gc->fixedWires[i].idx] = gc->fixedLabel;
+    for (uint64_t i = 0; i < gc->n_fixed_wires; ++i) {
+        labels[gc->fixed_wires[i].idx] = gc->fixed_label;
     }
 
     /* Process gates */
-    switch (type) {
+    switch (gc->type) {
     case GARBLE_TYPE_STANDARD:
         _eval_standard(gc, labels, &key);
         break;
@@ -160,7 +159,7 @@ garble_eval(const garble_circuit *gc, const block *inputs, block *outputs,
 
     /* Set output wire labels */
     if (outputs) {
-        for (long i = 0; i < gc->m; i++) {
+        for (uint64_t i = 0; i < gc->m; i++) {
             outputs[i] = labels[gc->outputs[i]];
         }
     }
@@ -171,24 +170,25 @@ garble_eval(const garble_circuit *gc, const block *inputs, block *outputs,
 }
 
 void
-garble_extract_labels(block *extracted, const block *labels, const int *bits,
-                      long n)
+garble_extract_labels(block *extracted, const block *labels, const bool *bits,
+                      uint64_t n)
 {
-    for (long i = 0; i < n; ++i) {
+    for (uint64_t i = 0; i < n; ++i) {
         extracted[i] = labels[2 * i + (bits[i] ? 1 : 0)];
     }
 }
 
 int
-garble_map_outputs(const block *outputs, const block *map, int *vals, int m)
+garble_map_outputs(const block *outputs, const block *map, bool *vals,
+                   uint64_t m)
 {
-	for (int i = 0; i < m; i++) {
+	for (uint64_t i = 0; i < m; i++) {
         if (garble_equal(map[i], outputs[2 * i])) {
 			vals[i] = 0;
         } else if (garble_equal(map[i], outputs[2 * i + 1])) {
 			vals[i] = 1;
 		} else {
-            printf("MAP OUTPUTS FAILED %d\n", i);
+            printf("MAP OUTPUTS FAILED %ld\n", i);
             return GARBLE_ERR;
         }
 	}

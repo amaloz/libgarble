@@ -12,56 +12,56 @@ MUX21Circuit(garble_circuit *gc, garble_context *ctxt, int theSwitch,
              int input0, int input1, int *output);
 
 int
-SHLCircuit(garble_circuit *gc, garble_context *ctxt, int n,
+SHLCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n,
            int *inputs, int *outputs);
 int
-SHRCircuit(garble_circuit *gc, garble_context *ctxt, int n,
+SHRCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n,
            int *inputs, int *outputs);
 int
-MULCircuit(garble_circuit *gc, garble_context *ctxt, int n,
+MULCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n,
            int *inputs, int *outputs);
 
 int
-XORCircuit(garble_circuit *gc, garble_context *ctxt, int n, const int *inputs,
+XORCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n, const int *inputs,
            int *outputs);
 int
-NOTCircuit(garble_circuit *gc, garble_context *ctxt, int n, const int *inputs,
+NOTCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n, const int *inputs,
            int *outputs);
 
 void
-ANDCircuit(garble_circuit *gc, garble_context *ctxt, int n, const int *inputs,
+ANDCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n, const int *inputs,
            int *outputs);
 void
-ORCircuit(garble_circuit *gc, garble_context *ctxt, int n, const int *inputs,
+ORCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n, const int *inputs,
           int *outputs);
 
 int
-MIXEDCircuit(garble_circuit *gc, garble_context *ctxt, int n,
+MIXEDCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n,
              int *inputs, int *outputs);
 int
-INCCircuit(garble_circuit *gc, garble_context *ctxt, int n,
+INCCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n,
            int *inputs, int *outputs);
 int
-EQUCircuit(garble_circuit *gc, garble_context *ctxt, int n,
+EQUCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n,
            int *inputs, int *outputs);
 int
-LEQCircuit(garble_circuit *gc, garble_context *ctxt, int n,
+LEQCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n,
            int *inputs, int *outputs);
 int
-GEQCircuit(garble_circuit *gc, garble_context *ctxt, int n,
+GEQCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n,
            int *inputs, int *outputs);
 int
-LESCircuit(garble_circuit *gc, garble_context *ctxt, int n,
+LESCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n,
            int *inputs, int *outputs);
 int
-GRECircuit(garble_circuit *gc, garble_context *ctxt, int n,
+GRECircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n,
            int *inputs, int *outputs);
 int
 MultiXORCircuit(garble_circuit *gc, garble_context *ctxt, int d,
-                int n, int *inputs, int *outputs);
+                uint64_t n, int *inputs, int *outputs);
 
 int
-MINCircuit(garble_circuit *gc, garble_context *ctxt, int n,
+MINCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n,
            int *inputs, int *outputs);
 
 int
@@ -77,16 +77,20 @@ int
 SubBytesTable(garble_circuit *gc, garble_context *ctxt, const int *inputs,
               int *outputs);
 int
-ShiftRows(garble_circuit *gc, garble_context *ctxt, const int *inputs,
-          int *outputs);
+ShiftRows(const int *inputs, int *outputs);
+
+int
+SquareCircuit(garble_circuit *gc, garble_context *ctxt, int inputs[4],
+              int outputs[4]);
+
 int
 MixColumns(garble_circuit *gc, garble_context *ctxt, const int *inputs,
            int *outputs);
 int
-ADDCircuit(garble_circuit *gc, garble_context *ctxt, int n,
+ADDCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n,
            int *inputs, int *outputs);
 int
-SUBCircuit(garble_circuit *gc, garble_context *ctxt, int n,
+SUBCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n,
            int *inputs, int *outputs);
 int
 ADD32Circuit(garble_circuit *gc, garble_context *ctxt,
@@ -120,15 +124,22 @@ void
 GF4SCLNCircuit(garble_circuit *gc, garble_context *ctxt, const int *inputs,
                int *outputs);
 void
-GF4SQCircuit(garble_circuit *gc, garble_context *ctxt, const int *inputs,
-             int *outputs);
+GF4SQCircuit(const int *inputs, int *outputs);
+
+void
+GF16SQCLCircuit(garble_circuit *gc, garble_context *ctxt, const int *inputs,
+                int *outputs);
+void
+GF16MULCircuit(garble_circuit *gc, garble_context *ctxt, const int *inputs,
+               int *outputs);
+
 int
 GF4SCLN2Circuit(garble_circuit *gc, garble_context *ctxt,
                 int *inputs, int *outputs);
 
 int
-RANDCircuit(garble_circuit *gc, garble_context *ctxt,
-            int n, int *inputs, int *outputs, int q, int qf);
+RANDCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n, int *outputs,
+            int q, int qf);
 
 void
 GF256InvCircuit(garble_circuit *gc, garble_context *ctxt, const int *inputs,

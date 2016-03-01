@@ -24,17 +24,17 @@
 #include <string.h>
 
 void
-ANDCircuit(garble_circuit *gc, garble_context *ctxt, int n, const int *inputs,
-           int *outputs)
+ANDCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n,
+           const int *inputs, int *outputs)
 {
     assert(n >= 2);
 
     outputs[0] = garble_next_wire(ctxt);
-	ANDGate(gc, inputs[0], inputs[1], outputs[0]);
+	garble_gate_AND(gc, inputs[0], inputs[1], outputs[0]);
     if (n > 2) {
-        for (int i = 2; i < n; i++) {
+        for (uint64_t i = 2; i < n; i++) {
             int wire = garble_next_wire(ctxt);
-            ANDGate(gc, inputs[i], outputs[0], wire);
+            garble_gate_AND(gc, inputs[i], outputs[0], wire);
             outputs[0] = wire;
         }
     }
@@ -45,50 +45,49 @@ int
 MUX21Circuit(garble_circuit *gc, garble_context *ctxt, 
              int theSwitch, int input0, int input1, int *output)
 {
-    int notSwitch = garble_next_wire(ctxt);
-    NOTGate(gc, theSwitch, notSwitch);
+    uint64_t notSwitch = garble_next_wire(ctxt);
+    garble_gate_NOT(gc, theSwitch, notSwitch);
     int and0 = garble_next_wire(ctxt);
-    ANDGate(gc, notSwitch, input0, and0);
+    garble_gate_AND(gc, notSwitch, input0, and0);
     int and1 = garble_next_wire(ctxt);
-    ANDGate(gc, theSwitch, input1, and1);
+    garble_gate_AND(gc, theSwitch, input1, and1);
     *output = garble_next_wire(ctxt);
-    ORGate(gc, and0, and1, *output);
+    garble_gate_OR(gc, and0, and1, *output);
     return 0;
 }
 
 void
-ORCircuit(garble_circuit *gc, garble_context *ctxt, int n, const int *inputs,
+ORCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n, const int *inputs,
           int *outputs)
 {
     assert(n >= 2);
 
     outputs[0] = garble_next_wire(ctxt);
-    ORGate(gc, inputs[0], inputs[1], outputs[0]);
+    garble_gate_OR(gc, inputs[0], inputs[1], outputs[0]);
     if (n > 2) {
-        for (int i = 2; i < n; i++) {
+        for (uint64_t i = 2; i < n; i++) {
             int wire = garble_next_wire(ctxt);
-            ORGate(gc, inputs[i], outputs[0], wire);
+            garble_gate_OR(gc, inputs[i], outputs[0], wire);
             outputs[0] = wire;
         }
     }
 }
 
 int
-MIXEDCircuit(garble_circuit *gc, garble_context *ctxt, int n, int *inputs,
+MIXEDCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n, int *inputs,
              int *outputs)
 {
-	int i;
 	int oldInternalWire = inputs[0];
-	int newInternalWire;
+	uint64_t newInternalWire;
 
-	for (i = 0; i < n - 1; i++) {
+	for (uint64_t i = 0; i < n - 1; i++) {
 		newInternalWire = garble_next_wire(ctxt);
 		if (i % 3 == 2)
-			ORGate(gc, inputs[i + 1], oldInternalWire, newInternalWire);
+			garble_gate_OR(gc, inputs[i + 1], oldInternalWire, newInternalWire);
 		if (i % 3 == 1)
-			ANDGate(gc, inputs[i + 1], oldInternalWire, newInternalWire);
+			garble_gate_AND(gc, inputs[i + 1], oldInternalWire, newInternalWire);
 		if (i % 3 == 0)
-			XORGate(gc, inputs[i + 1], oldInternalWire, newInternalWire);
+			garble_gate_XOR(gc, inputs[i + 1], oldInternalWire, newInternalWire);
 		oldInternalWire = newInternalWire;
 	}
 	outputs[0] = oldInternalWire;
@@ -114,9 +113,9 @@ GF16SQCLCircuit(garble_circuit *gc, garble_context *ctxt, const int *inputs,
 	int tempx[2];
 	XORCircuit(gc, ctxt, 4, ab, tempx);
 	int p[2], q[2];
-	GF4SQCircuit(gc, ctxt, tempx, p);
+	GF4SQCircuit(tempx, p);
 	int tempx2[4];
-	GF4SQCircuit(gc, ctxt, b, tempx2);
+	GF4SQCircuit(b, tempx2);
 	GF4SCLN2Circuit(gc, ctxt, tempx2, q);
 
 	outputs[0] = q[0];
@@ -191,19 +190,19 @@ GF4MULCircuit(garble_circuit *gc, garble_context *ctxt, const int *inputs,
 	d = inputs[2];
 
     temp1 = garble_next_wire(ctxt);
-	XORGate(gc, a, b, temp1);
+	garble_gate_XOR(gc, a, b, temp1);
 	temp2 = garble_next_wire(ctxt);
-	XORGate(gc, c, d, temp2);
+	garble_gate_XOR(gc, c, d, temp2);
 	e = garble_next_wire(ctxt);
-	ANDGate(gc, temp1, temp2, e);
+	garble_gate_AND(gc, temp1, temp2, e);
 	temp1 = garble_next_wire(ctxt);
-	ANDGate(gc, a, c, temp1);
+	garble_gate_AND(gc, a, c, temp1);
 	p = garble_next_wire(ctxt);
-	XORGate(gc, temp1, e, p);
+	garble_gate_XOR(gc, temp1, e, p);
 	temp2 = garble_next_wire(ctxt);
-	ANDGate(gc, b, d, temp2);
+	garble_gate_AND(gc, b, d, temp2);
 	q = garble_next_wire(ctxt);
-	XORGate(gc, temp2, e, q);
+	garble_gate_XOR(gc, temp2, e, q);
 
 	outputs[1] = p;
 	outputs[0] = q;
@@ -214,13 +213,12 @@ GF4SCLNCircuit(garble_circuit *gc, garble_context *ctxt, const int *inputs,
                int *outputs)
 {
 	outputs[0] = garble_next_wire(ctxt);
-	XORGate(gc, inputs[0], inputs[1], outputs[0]);
+	garble_gate_XOR(gc, inputs[0], inputs[1], outputs[0]);
 	outputs[1] = inputs[0];
 }
 
 void
-GF4SQCircuit(garble_circuit *gc, garble_context *ctxt, const int *inputs,
-             int *outputs)
+GF4SQCircuit(const int *inputs, int *outputs)
 {
 	outputs[0] = inputs[1];
 	outputs[1] = inputs[0];
@@ -282,7 +280,7 @@ GF16INVCircuit(garble_circuit *gc, garble_context *ctxt, const int *inputs,
 
 	int tempx[2], tempxs[2];
 	XORCircuit(gc, ctxt, 4, ab, tempx);
-	GF4SQCircuit(gc, ctxt, tempx, tempxs);
+	GF4SQCircuit(tempx, tempxs);
 
 	int c[2], d[2], e[2], p[2], q[2];
 	GF4SCLNCircuit(gc, ctxt, tempxs, c);
@@ -296,7 +294,7 @@ GF16INVCircuit(garble_circuit *gc, garble_context *ctxt, const int *inputs,
 
 	int tempx2[2];
 	XORCircuit(gc, ctxt, 4, cd, tempx2);
-	GF4SQCircuit(gc, ctxt, tempx2, e);
+	GF4SQCircuit(tempx2, e);
 	int eb[4], ea[4];
 	ea[0] = e[0];
 	ea[1] = e[1];
@@ -321,27 +319,27 @@ int GF4SCLN2Circuit(garble_circuit *gc, garble_context *ctxt,
 		int *inputs, int *outputs) {
 
 	outputs[1] = garble_next_wire(ctxt);
-	XORGate(gc, inputs[0], inputs[1], outputs[1]);
+	garble_gate_XOR(gc, inputs[0], inputs[1], outputs[1]);
 	outputs[0] = inputs[1];
 
 	return 0;
 }
 
-int RANDCircuit(garble_circuit *gc,
-		garble_context *ctxt, int n, int *inputs, int *outputs,
-		int q, int qf) {
+int RANDCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n, int *outputs,
+                int q, int qf)
+{
 	int i;
 	int oldInternalWire = garble_next_wire(ctxt);
-	int newInternalWire;
+	uint64_t newInternalWire;
 
-	ANDGate(gc, 0, 1, oldInternalWire);
+	garble_gate_AND(gc, 0, 1, oldInternalWire);
 
 	for (i = 2; i < q + qf - 1; i++) {
 		newInternalWire = garble_next_wire(ctxt);
 		if (i < q)
-			ANDGate(gc, i % n, oldInternalWire, newInternalWire);
+			garble_gate_AND(gc, i % n, oldInternalWire, newInternalWire);
 		else
-			XORGate(gc, i % n, oldInternalWire, newInternalWire);
+			garble_gate_XOR(gc, i % n, oldInternalWire, newInternalWire);
 		oldInternalWire = newInternalWire;
 	}
 	outputs[0] = oldInternalWire;
@@ -349,25 +347,24 @@ int RANDCircuit(garble_circuit *gc,
 }
 
 int INCCircuit(garble_circuit *gc, garble_context *ctxt,
-		int n, int *inputs, int *outputs) {
-	int i;
-	for (i = 0; i < n; i++)
+		uint64_t n, int *inputs, int *outputs) {
+	for (uint64_t i = 0; i < n; i++)
 		outputs[i] = garble_next_wire(ctxt);
 
-	NOTGate(gc, inputs[0], outputs[0]);
+	garble_gate_NOT(gc, inputs[0], outputs[0]);
 	int carry = inputs[0];
-	int newCarry;
-	for (i = 1; i < n; i++) {
-		XORGate(gc, inputs[i], carry, outputs[i]);
+	uint64_t newCarry;
+	for (uint64_t i = 1; i < n; i++) {
+		garble_gate_XOR(gc, inputs[i], carry, outputs[i]);
 		newCarry = garble_next_wire(ctxt);
-		ANDGate(gc, inputs[i], carry, newCarry);
+		garble_gate_AND(gc, inputs[i], carry, newCarry);
 		carry = newCarry;
 	}
 	return 0;
 }
 
 int SUBCircuit(garble_circuit *gc, garble_context *ctxt,
-		int n, int *inputs, int *outputs) {
+		uint64_t n, int *inputs, int *outputs) {
 	int tempWires[n / 2];
 	int tempWires2[n];
 	int split = n / 2;
@@ -378,23 +375,22 @@ int SUBCircuit(garble_circuit *gc, garble_context *ctxt,
 }
 
 int SHLCircuit(garble_circuit *gc, garble_context *ctxt,
-		int n, int *inputs, int *outputs) {
-	outputs[0] = fixedZeroWire(gc, ctxt);
+		uint64_t n, int *inputs, int *outputs) {
+	outputs[0] = garble_gate_zero(gc, ctxt);
 	memcpy(outputs + 1, inputs, sizeof(int) * (n - 1));
 	return 0;
 }
 
 int SHRCircuit(garble_circuit *gc, garble_context *ctxt,
-		int n, int *inputs, int *outputs) {
-	outputs[n - 1] = fixedZeroWire(gc, ctxt);
+		uint64_t n, int *inputs, int *outputs) {
+	outputs[n - 1] = garble_gate_zero(gc, ctxt);
 	memcpy(outputs, inputs + 1, sizeof(int) * (n - 1));
 	return 0;
 }
 
 int MULCircuit(garble_circuit *gc, garble_context *ctxt,
-		int nt, int *inputs, int *outputs) {
-	int i, j;
-	int n = nt / 2;
+		uint64_t nt, int *inputs, int *outputs) {
+	uint64_t n = nt / 2;
 	int *A = inputs;
 	int *B = inputs + n;
 
@@ -402,42 +398,41 @@ int MULCircuit(garble_circuit *gc, garble_context *ctxt,
 	int tempAddIn[4 * n];
 	int tempAddOut[4 * n];
 
-	for (i = 0; i < n; i++) {
-		for (j = 0; j < i; j++) {
-			tempAnd[i][j] = fixedZeroWire(gc, ctxt);
+	for (uint64_t i = 0; i < n; i++) {
+		for (uint64_t j = 0; j < i; j++) {
+			tempAnd[i][j] = garble_gate_zero(gc, ctxt);
 		}
-		for (j = i; j < i + n; j++) {
+		for (uint64_t j = i; j < i + n; j++) {
 			tempAnd[i][j] = garble_next_wire(ctxt);
-			ANDGate(gc, A[j - i], B[i], tempAnd[i][j]);
+			garble_gate_AND(gc, A[j - i], B[i], tempAnd[i][j]);
 		}
-		for (j = i + n; j < 2 * n; j++)
-			tempAnd[i][j] = fixedZeroWire(gc, ctxt);
+		for (uint64_t j = i + n; j < 2 * n; j++)
+			tempAnd[i][j] = garble_gate_zero(gc, ctxt);
 	}
 
-	for (j = 0; j < 2 * n; j++) {
+	for (uint64_t j = 0; j < 2 * n; j++) {
 		tempAddOut[j] = tempAnd[0][j];
 	}
-	for (i = 1; i < n; i++) {
-		for (j = 0; j < 2 * n; j++) {
+	for (uint64_t i = 1; i < n; i++) {
+		for (uint64_t j = 0; j < 2 * n; j++) {
 			tempAddIn[j] = tempAddOut[j];
 		}
-		for (j = 2 * n; j < 4 * n; j++) {
+		for (uint64_t j = 2 * n; j < 4 * n; j++) {
 			tempAddIn[j] = tempAnd[i][j - 2 * n];
 		}
 		ADDCircuit(gc, ctxt, 4 * n, tempAddIn, tempAddOut);
 	}
-	for (j = 0; j < 2 * n; j++) {
+	for (uint64_t j = 0; j < 2 * n; j++) {
 		outputs[j] = tempAddOut[j];
 	}
 	return 0;
 
 }
 
-int GRECircuit(garble_circuit *gc, garble_context *ctxt, int n,
+int GRECircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n,
 		int *inputs, int *outputs) {
 	int tempWires[n];
-	int i;
-	for (i = 0; i < n / 2; i++) {
+	for (uint64_t i = 0; i < n / 2; i++) {
 		tempWires[i] = inputs[i + n / 2];
 		tempWires[i + n / 2] = inputs[i];
 	}
@@ -446,42 +441,42 @@ int GRECircuit(garble_circuit *gc, garble_context *ctxt, int n,
 }
 
 int
-MINCircuit(garble_circuit *gc, garble_context *ctxt, int n,
+MINCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n,
            int *inputs, int *outputs)
 {
 	int i;
 	int lesOutput;
-	int notOutput = garble_next_wire(ctxt);
+	uint64_t notOutput = garble_next_wire(ctxt);
 	LESCircuit(gc, ctxt, n, inputs, &lesOutput);
-	NOTGate(gc, lesOutput, notOutput);
+	garble_gate_NOT(gc, lesOutput, notOutput);
     int split = n / 2;
 	for (i = 0; i < split; i++)
         MUX21Circuit(gc, ctxt, lesOutput, inputs[i], inputs[split + i], outputs+i);
 	return 0;
 }
 
-int LEQCircuit(garble_circuit *gc, garble_context *ctxt, int n,
+int LEQCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n,
 		int *inputs, int *outputs) {
 	int tempWires;
 	GRECircuit(gc, ctxt, n, inputs, &tempWires);
 	int outWire = garble_next_wire(ctxt);
-	NOTGate(gc, tempWires, outWire);
+	garble_gate_NOT(gc, tempWires, outWire);
 	outputs[0] = outWire;
 	return 0;
 }
 
-int GEQCircuit(garble_circuit *gc, garble_context *ctxt, int n,
+int GEQCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n,
 		int *inputs, int *outputs) {
 	int tempWires;
 	LESCircuit(gc, ctxt, n, inputs, &tempWires);
 	int outWire = garble_next_wire(ctxt);
-	NOTGate(gc, tempWires, outWire);
+	garble_gate_NOT(gc, tempWires, outWire);
 	outputs[0] = outWire;
 	return 0;
 }
 
 int
-LESCircuit(garble_circuit *gc, garble_context *ctxt, int n,
+LESCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n,
            int *inputs, int *outputs)
 {
     /* Returns 0 if the first number is less.
@@ -504,26 +499,26 @@ LESCircuit(garble_circuit *gc, garble_context *ctxt, int n,
         int A = inputs[split + i];
         int B = inputs[i];
 
-	    int notA = garble_next_wire(ctxt);
-	    NOTGate(gc, A, notA);
+	    uint64_t notA = garble_next_wire(ctxt);
+	    garble_gate_NOT(gc, A, notA);
 
-	    int notB = garble_next_wire(ctxt);
-	    NOTGate(gc, B, notB);
+	    uint64_t notB = garble_next_wire(ctxt);
+	    garble_gate_NOT(gc, B, notB);
 
 	    int case1 = garble_next_wire(ctxt);
-	    ANDGate(gc, notA, B, case1);
+	    garble_gate_AND(gc, notA, B, case1);
 
 	    int case2 = garble_next_wire(ctxt);
-	    ANDGate(gc, A, notB, case2);
+	    garble_gate_AND(gc, A, notB, case2);
 
         if (i != split - 1)
             andInputs[i][0] = case1;
 
         int orOutput = garble_next_wire(ctxt);
-        ORGate(gc, case1, case2, orOutput);
+        garble_gate_OR(gc, case1, case2, orOutput);
 
-        int norOutput = garble_next_wire(ctxt);
-        NOTGate(gc, orOutput, norOutput);
+        uint64_t norOutput = garble_next_wire(ctxt);
+        garble_gate_NOT(gc, orOutput, norOutput);
 
         for (int j = 0; j < i; j++) {
             //printf("filling add[%d,%d]\n", j, i-j);
@@ -535,7 +530,7 @@ LESCircuit(garble_circuit *gc, garble_context *ctxt, int n,
 
     /*  Do the aggregate operations with orInputs */
     for (int i = 0; i < split - 1; i++) {
-        int nAndInputs = split - i;
+        uint64_t nAndInputs = split - i;
         ANDCircuit(gc, ctxt, nAndInputs, andInputs[i], &finalORInputs[i]);
     }
 
@@ -552,39 +547,38 @@ LESCircuit(garble_circuit *gc, garble_context *ctxt, int n,
 	return 0;
 }
 
-int EQUCircuit(garble_circuit *gc, garble_context *ctxt, int n,
+int EQUCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n,
 		int *inputs, int *outputs) {
 	int tempWires[n / 2];
 
 	XORCircuit(gc, ctxt, n, inputs, tempWires);
-	int i;
 	int tempWire1 = tempWires[0];
 	int tempWire2;
-	for (i = 1; i < n / 2; i++) {
+	for (uint64_t i = 1; i < n / 2; i++) {
 		tempWire2 = garble_next_wire(ctxt);
-		ORGate(gc, tempWire1, tempWires[i], tempWire2);
+		garble_gate_OR(gc, tempWire1, tempWires[i], tempWire2);
 		tempWire1 = tempWire2;
 	}
 	int outWire = garble_next_wire(ctxt);
 
-	NOTGate(gc, tempWire1, outWire);
+	garble_gate_NOT(gc, tempWire1, outWire);
 	outputs[0] = outWire;
 	return 0;
 }
 
 int
-NOTCircuit(garble_circuit *gc, garble_context *ctxt, int n, const int *inputs,
+NOTCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n, const int *inputs,
            int *outputs)
 {
-	for (int i = 0; i < n; i++) {
+	for (uint64_t i = 0; i < n; i++) {
 		outputs[i] = garble_next_wire(ctxt);
-		NOTGate(gc, inputs[i], outputs[i]);
+		garble_gate_NOT(gc, inputs[i], outputs[i]);
 	}
 	return 0;
 }
 
 int ADDCircuit(garble_circuit *gc, garble_context *ctxt,
-		int n, int *inputs, int *outputs) {
+		uint64_t n, int *inputs, int *outputs) {
 	int i;
 	int tempOut[3];
 	int split = n / 2;
@@ -613,11 +607,11 @@ int ADD32Circuit(garble_circuit *gc,
 	int wire4 = garble_next_wire(ctxt);
 	int wire5 = garble_next_wire(ctxt);
 
-	XORGate(gc, inputs[2], inputs[0], wire1);
-	XORGate(gc, inputs[1], inputs[0], wire2);
-	XORGate(gc, inputs[2], wire2, wire3);
-	ANDGate(gc, wire1, wire2, wire4);
-	XORGate(gc, inputs[0], wire4, wire5);
+	garble_gate_XOR(gc, inputs[2], inputs[0], wire1);
+	garble_gate_XOR(gc, inputs[1], inputs[0], wire2);
+	garble_gate_XOR(gc, inputs[2], wire2, wire3);
+	garble_gate_AND(gc, wire1, wire2, wire4);
+	garble_gate_XOR(gc, inputs[0], wire4, wire5);
 	outputs[0] = wire3;
 	outputs[1] = wire5;
 	return 0;
@@ -630,8 +624,8 @@ ADD22Circuit(garble_circuit *gc, garble_context *ctxt,
 	int wire1 = garble_next_wire(ctxt);
 	int wire2 = garble_next_wire(ctxt);
 
-	XORGate(gc, inputs[0], inputs[1], wire1);
-	ANDGate(gc, inputs[0], inputs[1], wire2);
+	garble_gate_XOR(gc, inputs[0], inputs[1], wire1);
+	garble_gate_AND(gc, inputs[0], inputs[1], wire2);
 	outputs[0] = wire1;
 	outputs[1] = wire2;
 	return 0;
@@ -639,7 +633,7 @@ ADD22Circuit(garble_circuit *gc, garble_context *ctxt,
 
 int
 MultiXORCircuit(garble_circuit *gc, garble_context *ctxt, int d,
-                int n, int *inputs, int *outputs)
+                uint64_t n, int *inputs, int *outputs)
 {
 	int div = n / d;
 
@@ -666,12 +660,12 @@ MultiXORCircuit(garble_circuit *gc, garble_context *ctxt, int d,
 }
 
 int
-XORCircuit(garble_circuit *gc, garble_context *ctxt, int n, const int *inputs,
+XORCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n, const int *inputs,
            int *outputs)
 {
-	for (int i = 0; i < n / 2; i++) {
+	for (uint64_t i = 0; i < n / 2; i++) {
 		int internalWire = garble_next_wire(ctxt);
-		XORGate(gc, inputs[i], inputs[n / 2 + i], internalWire);
+		garble_gate_XOR(gc, inputs[i], inputs[n / 2 + i], internalWire);
 		outputs[i] = internalWire;
 	}
 	return 0;
@@ -686,16 +680,16 @@ GF8MULCircuit(garble_circuit *gc, garble_context *ctxt, const int *inputs,
 	outputs[0] = inputs[7];
 	outputs[2] = inputs[1];
 	outputs[3] = garble_next_wire(ctxt);
-	XORGate(gc, inputs[7], inputs[2], outputs[3]);
+	garble_gate_XOR(gc, inputs[7], inputs[2], outputs[3]);
 
 	outputs[4] = garble_next_wire(ctxt);
-	XORGate(gc, inputs[7], inputs[3], outputs[4]);
+	garble_gate_XOR(gc, inputs[7], inputs[3], outputs[4]);
 
 	outputs[5] = inputs[4];
 	outputs[6] = inputs[5];
 	outputs[7] = inputs[6];
 	outputs[1] = garble_next_wire(ctxt);
-	XORGate(gc, inputs[7], inputs[0], outputs[1]);
+	garble_gate_XOR(gc, inputs[7], inputs[0], outputs[1]);
 
 	return 0;
 }

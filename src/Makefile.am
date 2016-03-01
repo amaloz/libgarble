@@ -1,6 +1,6 @@
 lib_LTLIBRARIES = libgarble.la
 
-COMMON_CFLAGS=-Wall -Wformat -Wformat-security -O3
+COMMON_CFLAGS=-Werror -Wall -Wformat -Wformat-security
 DEV_CFLAGS=-Wextra -Wunused -Wshadow -Wmissing-prototypes -Wcast-qual \
 	-march=native -lmsgpackc
 

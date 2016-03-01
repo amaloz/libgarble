@@ -57,9 +57,9 @@ hash4(block *A0, block *A1, block *B0, block *B1,
 }
 
 static void
-garbleCircuitHalfGates(garble_circuit *gc, const AES_KEY *K, block R)
+_garble_halfgates(garble_circuit *gc, const AES_KEY *K, block delta)
 {
-	for (long i = 0; i < gc->q; i++) {
+	for (uint64_t i = 0; i < gc->q; i++) {
         garble_gate *g;
         block A0, A1, B0, B1;
 
@@ -78,15 +78,12 @@ garbleCircuitHalfGates(garble_circuit *gc, const AES_KEY *K, block R)
 
             tweak = garble_make_block(2 * i, (long) 0);
             hash2(&A0, &A1, tweak, K);
-            gc->garbledTable[i].table[pa] =
-                garble_xor(A0, gc->wires[g->input0].label1);
-            gc->garbledTable[i].table[!pa] =
-                garble_xor(A1, gc->wires[g->input0].label0);
+            gc->table[2 * i + pa] = garble_xor(A0, gc->wires[g->input0].label1);
+            gc->table[2 * i + !pa] = garble_xor(A1, gc->wires[g->input0].label0);
             gc->wires[g->output].label0 = gc->wires[g->input0].label1;
         } else {
             long pa = garble_lsb(A0);
             long pb = garble_lsb(B0);
-            block table[2];
             block tweak1, tweak2;
             block tmp, W0;
 
@@ -96,49 +93,48 @@ garbleCircuitHalfGates(garble_circuit *gc, const AES_KEY *K, block R)
             hash4(&A0, &A1, &B0, &B1, tweak1, tweak2, K);
             switch (g->type) {
             case GARBLE_GATE_AND:
-                table[0] = garble_xor(A0, A1);
+                gc->table[2 * i] = garble_xor(A0, A1);
                 if (pb)
-                    table[0] = garble_xor(table[0], R);
+                    gc->table[2 * i] = garble_xor(gc->table[2 * i], delta);
                 W0 = A0;
                 if (pa)
-                    W0 = garble_xor(W0, table[0]);
+                    W0 = garble_xor(W0, gc->table[2 * i]);
                 tmp = garble_xor(B0, B1);
-                table[1] = garble_xor(tmp, gc->wires[g->input0].label0);
+                gc->table[2 * i + 1] = garble_xor(tmp, gc->wires[g->input0].label0);
                 W0 = garble_xor(W0, B0);
                 if (pb)
                     W0 = garble_xor(W0, tmp);
                 goto finish;
             case GARBLE_GATE_OR:
-                table[0] = garble_xor(A0, A1);
+                gc->table[2 * i] = garble_xor(A0, A1);
                 if (!pb)
-                    table[0] = garble_xor(table[0], R);
+                    gc->table[2 * i] = garble_xor(gc->table[2 * i], delta);
                 W0 = pa ? A1 : A0;
                 if ((!pa * !pb) ^ 1)
-                    W0 = garble_xor(W0, R);
-                table[1] = garble_xor(B0, B1);
-                table[1] = garble_xor(table[1], gc->wires[g->input0].label1);
+                    W0 = garble_xor(W0, delta);
+                gc->table[2 * i + 1] = garble_xor(B0, B1);
+                gc->table[2 * i + 1] = garble_xor(gc->table[2 * i + 1],
+                                                  gc->wires[g->input0].label1);
                 W0 = garble_xor(W0, pb ? B1 : B0);
                 goto finish;
             default:
                 assert(0);
                 abort();
             finish:
-                gc->garbledTable[i].table[0] = table[0];
-                gc->garbledTable[i].table[1] = table[1];
                 gc->wires[g->output].label0 = W0;
             }
         }
 
-        gc->wires[g->output].label1 = garble_xor(gc->wires[g->output].label0, R);
+        gc->wires[g->output].label1 = garble_xor(gc->wires[g->output].label0,
+                                                 delta);
 	}
 }
 
 static void
-garbleCircuitStandard(garble_circuit *gc, const AES_KEY *key, block delta)
+_garble_standard(garble_circuit *gc, const AES_KEY *key, block delta)
 {
-    for (long i = 0; i < gc->q; i++) {
+    for (uint64_t i = 0; i < gc->q; i++) {
         garble_gate *g = &gc->gates[i];
-        garble_table *gt = &gc->garbledTable[i];
         int input0, input1, output;
         block tweak, blocks[4], keys[4], mask[4];
         block A0, A1, B0, B1;
@@ -236,19 +232,18 @@ garbleCircuitStandard(garble_circuit *gc, const AES_KEY *key, block delta)
         }
 
         if (2*lsb0 + lsb1 != 0)
-            gt->table[2*lsb0 + lsb1 -1] = garble_xor(blocks[0], mask[0]);
+            gc->table[3 * i + 2*lsb0 + lsb1 -1] = garble_xor(blocks[0], mask[0]);
         if (2*lsb0 + 1-lsb1 != 0)
-            gt->table[2*lsb0 + 1-lsb1-1] = garble_xor(blocks[1], mask[1]);
+            gc->table[3 * i + 2*lsb0 + 1-lsb1-1] = garble_xor(blocks[1], mask[1]);
         if (2*(1-lsb0) + lsb1 != 0)
-            gt->table[2*(1-lsb0) + lsb1-1] = garble_xor(blocks[2], mask[2]);
+            gc->table[3 * i + 2*(1-lsb0) + lsb1-1] = garble_xor(blocks[2], mask[2]);
         if (2*(1-lsb0) + (1-lsb1) != 0)
-            gt->table[2*(1-lsb0) + (1-lsb1)-1] = garble_xor(blocks[3], mask[3]);
+            gc->table[3 * i + 2*(1-lsb0) + (1-lsb1)-1] = garble_xor(blocks[3], mask[3]);
     }
 }
 
 int
-garble_garble(garble_circuit *gc, const block *inputLabels, block *outputLabels,
-              garble_type_e type)
+garble_garble(garble_circuit *gc, const block *inputs, block *outputs)
 {
     AES_KEY key;
     block delta, other;
@@ -256,58 +251,58 @@ garble_garble(garble_circuit *gc, const block *inputLabels, block *outputLabels,
     if (gc == NULL)
         return GARBLE_ERR;
 
-    if (inputLabels) {
-        for (int i = 0; i < gc->n; ++i) {
-            gc->wires[i].label0 = inputLabels[2 * i];
-            gc->wires[i].label1 = inputLabels[2 * i + 1];
+    if (inputs) {
+        for (uint64_t i = 0; i < gc->n; ++i) {
+            gc->wires[i].label0 = inputs[2 * i];
+            gc->wires[i].label1 = inputs[2 * i + 1];
         }
         delta = garble_xor(gc->wires[0].label0, gc->wires[0].label1);
     } else {
         delta = garble_random_block();
-        for (int i = 0; i < gc->n; ++i) {
+        for (uint64_t i = 0; i < gc->n; ++i) {
             gc->wires[i].label0 = garble_random_block();
             gc->wires[i].label1 = garble_xor(gc->wires[i].label0, delta);
         }
     }
 
-    for (int i = gc->n; i < gc->r; ++i) {
+    for (uint64_t i = gc->n; i < gc->r; ++i) {
         gc->wires[i].label0 = garble_zero_block();
         gc->wires[i].label1 = garble_zero_block();
     }
 
-    gc->fixedLabel = garble_random_block();
-    other = garble_xor(gc->fixedLabel, delta);
-    for (int i = 0; i < gc->nFixedWires; ++i) {
-        switch (gc->fixedWires[i].type) {
+    gc->fixed_label = garble_random_block();
+    other = garble_xor(gc->fixed_label, delta);
+    for (uint64_t i = 0; i < gc->n_fixed_wires; ++i) {
+        switch (gc->fixed_wires[i].type) {
         case GARBLE_FIXED_WIRE_ZERO:
-            gc->wires[gc->fixedWires[i].idx].label0 = gc->fixedLabel;
-            gc->wires[gc->fixedWires[i].idx].label1 = other;
+            gc->wires[gc->fixed_wires[i].idx].label0 = gc->fixed_label;
+            gc->wires[gc->fixed_wires[i].idx].label1 = other;
             break;
         case GARBLE_FIXED_WIRE_ONE:
-            gc->wires[gc->fixedWires[i].idx].label0 = other;
-            gc->wires[gc->fixedWires[i].idx].label1 = gc->fixedLabel;
+            gc->wires[gc->fixed_wires[i].idx].label0 = other;
+            gc->wires[gc->fixed_wires[i].idx].label1 = gc->fixed_label;
             break;
         }
     }
 
-    gc->globalKey = garble_random_block();
-    AES_set_encrypt_key(gc->globalKey, &key);
-    switch (type) {
+    gc->global_key = garble_random_block();
+    AES_set_encrypt_key(gc->global_key, &key);
+    switch (gc->type) {
     case GARBLE_TYPE_STANDARD:
-        garbleCircuitStandard(gc, &key, delta);
+        _garble_standard(gc, &key, delta);
         break;
     case GARBLE_TYPE_HALFGATES:
-        garbleCircuitHalfGates(gc, &key, delta);
+        _garble_halfgates(gc, &key, delta);
         break;
     default:
         assert(0);
         abort();
     }
 
-    if (outputLabels) {
-        for (int i = 0; i < gc->m; ++i) {
-            outputLabels[2*i] = gc->wires[gc->outputs[i]].label0;
-            outputLabels[2*i+1] = gc->wires[gc->outputs[i]].label1;
+    if (outputs) {
+        for (uint64_t i = 0; i < gc->m; ++i) {
+            outputs[2*i] = gc->wires[gc->outputs[i]].label0;
+            outputs[2*i+1] = gc->wires[gc->outputs[i]].label1;
         }
     }
 
@@ -315,29 +310,21 @@ garble_garble(garble_circuit *gc, const block *inputLabels, block *outputLabels,
 }
 
 void
-garble_hash(const garble_circuit *gc,
-            unsigned char hash[SHA_DIGEST_LENGTH],
-            garble_type_e type)
+garble_hash(const garble_circuit *gc, unsigned char hash[SHA_DIGEST_LENGTH])
 {
+    SHA_CTX c;
     memset(hash, '\0', SHA_DIGEST_LENGTH);
-    for (int i = 0; i < gc->q; ++i) {
-        SHA_CTX c;
-
-        (void) SHA1_Init(&c);
-        (void) SHA1_Update(&c, hash, SHA_DIGEST_LENGTH);
-        (void) SHA1_Update(&c, &gc->garbledTable[i], sizeof(garble_table));
-        (void) SHA1_Final(hash, &c);
-    }
+    (void) SHA1_Init(&c);
+    (void) SHA1_Update(&c, gc->table, gc->q * garble_table_size(gc));
+    (void) SHA1_Final(hash, &c);
 }
 
 int
-garble_check(garble_circuit *gc,
-             const unsigned char hash[SHA_DIGEST_LENGTH],
-             garble_type_e type)
+garble_check(garble_circuit *gc, const unsigned char hash[SHA_DIGEST_LENGTH])
 {
     unsigned char newhash[SHA_DIGEST_LENGTH];
 
-    garble_hash(gc, newhash, type);
+    garble_hash(gc, newhash);
     for (int i = 0; i < SHA_DIGEST_LENGTH; ++i) {
         if (newhash[i] != hash[i]) {
             return GARBLE_ERR;
@@ -355,12 +342,12 @@ garble_create_delta(void)
 }
 
 void
-garble_create_input_labels(block *labels, int n, block *delta)
+garble_create_input_labels(block *labels, uint64_t n, block *delta)
 {
     block delta_;
 
     delta_ = delta ? *delta : garble_create_delta();
-	for (int i = 0; i < 2 * n; i += 2) {
+	for (uint64_t i = 0; i < 2 * n; i += 2) {
         labels[i] = garble_random_block();
 		labels[i + 1] = garble_xor(labels[i], delta_);
 	}

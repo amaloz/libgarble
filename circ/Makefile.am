@@ -1,3 +1,5 @@
+AM_CPPFLAGS = -I$(top_srcdir)/src
+
 lib_LTLIBRARIES = libgarblec.la
 
 COMMON_CFLAGS=-Wall -Wformat -Wformat-security -O3
