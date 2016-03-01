@@ -30,3 +30,14 @@
 
 # Debug files
 *.dSYM/
+
+Makefile.in
+*.log
+*.status
+.deps
+.libs
+stamp-h1
+autom4te.cache
+build
+config.h.in*
+libtool
