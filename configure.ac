@@ -17,16 +17,16 @@ AC_CONFIG_FILES([Makefile src/Makefile circ/Makefile test/Makefile])
 AC_PROG_CC
 AC_PROG_LIBTOOL
 
-AC_MSG_CHECKING([if debug option is enabled])
-AC_ARG_ENABLE(debug,
-    AS_HELP_STRING([--enable-debug], [enable debugging, default: no]))
+dnl AC_MSG_CHECKING([if debug option is enabled])
+dnl AC_ARG_ENABLE(debug,
+dnl     AS_HELP_STRING([--enable-debug], [enable debugging, default: no]))
 
-AC_MSG_RESULT([$enable_debug])
-if test "$enable_debug" != "no"; then
-   CFLAGS="$CFLAGS -g -O0"
-else
-    CFLAGS="$CFLAGS -DNDEBUG"
-fi
+dnl AC_MSG_RESULT([$enable_debug])
+dnl if test "$enable_debug" != "no"; then
+dnl    CFLAGS="$CFLAGS -g -O0"
+dnl else
+dnl     CFLAGS="$CFLAGS -DNDEBUG"
+dnl fi
 
 AC_CHECK_HEADERS([msgpack.h])
 

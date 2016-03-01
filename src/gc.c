@@ -22,14 +22,15 @@ garble_new(garble_circuit *gc, uint64_t n, uint64_t m, uint64_t q, uint64_t r,
     gc->fixed_wires = calloc(r, sizeof(garble_fixed_wire));
     gc->outputs = calloc(m, sizeof(int));
     gc->wires = calloc(r, sizeof(garble_wire));
-    switch (type) {
-    case GARBLE_TYPE_STANDARD:
-        gc->table = calloc(q, 3 * sizeof(block));
-        break;
-    case GARBLE_TYPE_HALFGATES:
-        gc->table = calloc(q, 2 * sizeof(block));
-        break;
-    }
+    gc->table = NULL;
+    /* switch (type) { */
+    /* case GARBLE_TYPE_STANDARD: */
+    /*     gc->table = calloc(q, 3 * sizeof(block)); */
+    /*     break; */
+    /* case GARBLE_TYPE_HALFGATES: */
+    /*     gc->table = calloc(q, 2 * sizeof(block)); */
+    /*     break; */
+    /* } */
 
     gc->type = type;
 	gc->m = m;
@@ -79,9 +80,8 @@ garble_size(const garble_circuit *gc, bool wires)
     size += sizeof gc->type;
     size += sizeof(garble_gate) * gc->q;
     size += garble_table_size(gc) * gc->q;
-    if (wires) {
+    if (wires)
         size += sizeof(garble_wire) * gc->r;
-    }
     size += sizeof(garble_fixed_wire) * gc->n_fixed_wires;
     size += sizeof(int) * gc->m;
     size += sizeof gc->fixed_label;
@@ -110,9 +110,8 @@ garble_to_buffer(const garble_circuit *gc, char *buf, bool wires)
 
     p += cpy_to_buf(buf + p, gc->gates, sizeof(garble_gate) * gc->q);
     p += cpy_to_buf(buf + p, gc->table, garble_table_size(gc) * gc->q);
-    if (wires) {
+    if (wires)
         p += cpy_to_buf(buf + p, gc->wires, sizeof(garble_wire) * gc->r);
-    }
     if (gc->n_fixed_wires > 0) {
         p += cpy_to_buf(buf + p, gc->fixed_wires,
                         sizeof(garble_fixed_wire) * gc->n_fixed_wires);

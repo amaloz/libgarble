@@ -2,7 +2,7 @@ lib_LTLIBRARIES = libgarble.la
 
 COMMON_CFLAGS=-Werror -Wall -Wformat -Wformat-security
 DEV_CFLAGS=-Wextra -Wunused -Wshadow -Wmissing-prototypes -Wcast-qual \
-	-march=native -lmsgpackc
+	-march=native
 
 AM_CFLAGS=$(COMMON_CFLAGS) $(DEV_CFLAGS)
 

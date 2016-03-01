@@ -3,8 +3,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/src
 lib_LTLIBRARIES = libgarblec.la
 
 COMMON_CFLAGS=-Wall -Wformat -Wformat-security -O3
-DEV_CFLAGS=-Wextra -Wunused -Wshadow -Wmissing-prototypes -Wcast-qual \
-	-march=native -lmsgpackc
+DEV_CFLAGS=-Wextra -Wunused -Wshadow -Wmissing-prototypes -Wcast-qual
 
 AM_CFLAGS=$(COMMON_CFLAGS) $(DEV_CFLAGS)
 

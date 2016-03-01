@@ -125,10 +125,11 @@ int
 garble_map_outputs(const block *outputs, const block *map, bool *vals,
                    uint64_t m);
 
+/* write/read circuit description to/from file */
 int
-garble_to_file(garble_circuit *gc, char *fname);
+garble_circuit_to_file(garble_circuit *gc, char *fname);
 int
-garble_from_file(garble_circuit *gc, char *fname);
+garble_circuit_from_file(garble_circuit *gc, char *fname);
 
 int
 garble_next_wire(garble_context *ctxt);

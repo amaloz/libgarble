@@ -146,13 +146,13 @@ _garble_standard(garble_circuit *gc, const AES_KEY *key, block delta)
         input1 = g->input1;
         output = g->output;
 
-        if ((garble_equal(gc->wires[input0].label0, garble_zero_block())
-            || garble_equal(gc->wires[input0].label1, garble_zero_block())
-            || garble_equal(gc->wires[input1].label0, garble_zero_block())
-            || garble_equal(gc->wires[input1].label1, garble_zero_block()))
-            && g->type != GARBLE_GATE_NOT) {
-            abort();
-        }
+        /* if ((garble_equal(gc->wires[input0].label0, garble_zero_block()) */
+        /*     || garble_equal(gc->wires[input0].label1, garble_zero_block()) */
+        /*     || garble_equal(gc->wires[input1].label0, garble_zero_block()) */
+        /*     || garble_equal(gc->wires[input1].label1, garble_zero_block())) */
+        /*     && g->type != GARBLE_GATE_NOT) { */
+        /*     abort(); */
+        /* } */
 
         if (g->type == GARBLE_GATE_XOR) {
             gc->wires[output].label0 =
@@ -161,7 +161,7 @@ _garble_standard(garble_circuit *gc, const AES_KEY *key, block delta)
                 garble_xor(gc->wires[input0].label1, gc->wires[input1].label0);
             continue;
         }
-        tweak = garble_make_block(i, (long)0);
+        tweak = garble_make_block(i, (long) 0);
         lsb0 = garble_lsb(gc->wires[input0].label0);
         lsb1 = garble_lsb(gc->wires[input1].label0);
 
@@ -265,10 +265,10 @@ garble_garble(garble_circuit *gc, const block *inputs, block *outputs)
         }
     }
 
-    for (uint64_t i = gc->n; i < gc->r; ++i) {
-        gc->wires[i].label0 = garble_zero_block();
-        gc->wires[i].label1 = garble_zero_block();
-    }
+    /* for (uint64_t i = gc->n; i < gc->r; ++i) { */
+    /*     gc->wires[i].label0 = garble_zero_block(); */
+    /*     gc->wires[i].label1 = garble_zero_block(); */
+    /* } */
 
     gc->fixed_label = garble_random_block();
     other = garble_xor(gc->fixed_label, delta);
@@ -289,14 +289,15 @@ garble_garble(garble_circuit *gc, const block *inputs, block *outputs)
     AES_set_encrypt_key(gc->global_key, &key);
     switch (gc->type) {
     case GARBLE_TYPE_STANDARD:
+        if (gc->table == NULL)
+            gc->table = calloc(gc->q, 3 * sizeof(block));
         _garble_standard(gc, &key, delta);
         break;
     case GARBLE_TYPE_HALFGATES:
+        if (gc->table == NULL)
+            gc->table = calloc(gc->q, 2 * sizeof(block));
         _garble_halfgates(gc, &key, delta);
         break;
-    default:
-        assert(0);
-        abort();
     }
 
     if (outputs) {

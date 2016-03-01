@@ -1,7 +1,7 @@
-AM_CPPFLAGS = \
+AM_CFLAGS = \
 	-I$(top_srcdir)/src	\
 	-I$(top_srcdir)/circ \
-	-O0
+	-lmsgpackc
 
 AM_LDFLAGS = \
 	$(top_builddir)/src/libgarble.la	\
@@ -9,7 +9,6 @@ AM_LDFLAGS = \
 
 check_PROGRAMS = \
 	aes
-
 
 TESTS = $(check_PROGRAMS)
 
