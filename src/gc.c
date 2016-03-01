@@ -21,16 +21,8 @@ garble_new(garble_circuit *gc, uint64_t n, uint64_t m, uint64_t q, uint64_t r,
     gc->gates = calloc(q, sizeof(garble_gate));
     gc->fixed_wires = calloc(r, sizeof(garble_fixed_wire));
     gc->outputs = calloc(m, sizeof(int));
-    gc->wires = calloc(r, sizeof(garble_wire));
+    gc->wires = NULL;
     gc->table = NULL;
-    /* switch (type) { */
-    /* case GARBLE_TYPE_STANDARD: */
-    /*     gc->table = calloc(q, 3 * sizeof(block)); */
-    /*     break; */
-    /* case GARBLE_TYPE_HALFGATES: */
-    /*     gc->table = calloc(q, 2 * sizeof(block)); */
-    /*     break; */
-    /* } */
 
     gc->type = type;
 	gc->m = m;

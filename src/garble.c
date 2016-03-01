@@ -146,13 +146,15 @@ _garble_standard(garble_circuit *gc, const AES_KEY *key, block delta)
         input1 = g->input1;
         output = g->output;
 
-        /* if ((garble_equal(gc->wires[input0].label0, garble_zero_block()) */
-        /*     || garble_equal(gc->wires[input0].label1, garble_zero_block()) */
-        /*     || garble_equal(gc->wires[input1].label0, garble_zero_block()) */
-        /*     || garble_equal(gc->wires[input1].label1, garble_zero_block())) */
-        /*     && g->type != GARBLE_GATE_NOT) { */
-        /*     abort(); */
-        /* } */
+#ifdef DEBUG
+        if ((garble_equal(gc->wires[input0].label0, garble_zero_block())
+            || garble_equal(gc->wires[input0].label1, garble_zero_block())
+            || garble_equal(gc->wires[input1].label0, garble_zero_block())
+            || garble_equal(gc->wires[input1].label1, garble_zero_block()))
+            && g->type != GARBLE_GATE_NOT) {
+            abort();
+        }
+#endif
 
         if (g->type == GARBLE_GATE_XOR) {
             gc->wires[output].label0 =
@@ -251,6 +253,9 @@ garble_garble(garble_circuit *gc, const block *inputs, block *outputs)
     if (gc == NULL)
         return GARBLE_ERR;
 
+    if (gc->wires == NULL)
+        gc->wires = calloc(gc->r, sizeof(garble_wire));
+
     if (inputs) {
         for (uint64_t i = 0; i < gc->n; ++i) {
             gc->wires[i].label0 = inputs[2 * i];
@@ -265,10 +270,12 @@ garble_garble(garble_circuit *gc, const block *inputs, block *outputs)
         }
     }
 
-    /* for (uint64_t i = gc->n; i < gc->r; ++i) { */
-    /*     gc->wires[i].label0 = garble_zero_block(); */
-    /*     gc->wires[i].label1 = garble_zero_block(); */
-    /* } */
+#ifdef DEBUG
+    for (uint64_t i = gc->n; i < gc->r; ++i) {
+        gc->wires[i].label0 = garble_zero_block();
+        gc->wires[i].label1 = garble_zero_block();
+    }
+#endif
 
     gc->fixed_label = garble_random_block();
     other = garble_xor(gc->fixed_label, delta);
