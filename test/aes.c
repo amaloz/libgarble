@@ -33,12 +33,12 @@
 
 #define AES_CIRCUIT_FILE_NAME "./aesCircuit"
 
-static const int roundLimit = 10;
+static const int roundLimit = 1;
 static const int n = 128 * (10 + 1);
 static const int m = 128;
 
 static void
-buildAESCircuit(garble_circuit *gc)
+build(garble_circuit *gc, garble_type_e type)
 {
 	garble_context ctxt;
 
@@ -50,7 +50,7 @@ buildAESCircuit(garble_circuit *gc)
     int shiftRowsOutputs[128];
     int mixColumnOutputs[128];
 
-	garble_new(gc, n, m, q, r, GARBLE_TYPE_HALFGATES);
+	garble_new(gc, n, m, q, r, type);
 	garble_start_building(gc, &ctxt);
 
 	countToN(addKeyInputs, 256);
@@ -63,19 +63,20 @@ buildAESCircuit(garble_circuit *gc)
 			SubBytes(gc, &ctxt, addKeyOutputs + 8 * i, subBytesOutputs + 8 * i);
 		}
 
-		ShiftRows(subBytesOutputs, shiftRowsOutputs);
+		/* ShiftRows(subBytesOutputs, shiftRowsOutputs); */
 
-		for (int i = 0; i < 4; i++) {
-			if (round != roundLimit - 1)
-				MixColumns(gc, &ctxt, shiftRowsOutputs + i * 32,
-                           mixColumnOutputs + 32 * i);
-		}
-		for (int i = 0; i < 128; i++) {
-			addKeyInputs[i] = mixColumnOutputs[i];
-			addKeyInputs[i + 128] = (round + 2) * 128 + i;
-		}
+		/* for (int i = 0; i < 4; i++) { */
+		/* 	if (round != roundLimit - 1) */
+		/* 		MixColumns(gc, &ctxt, shiftRowsOutputs + i * 32, */
+        /*                    mixColumnOutputs + 32 * i); */
+		/* } */
+		/* for (int i = 0; i < 128; i++) { */
+		/* 	addKeyInputs[i] = mixColumnOutputs[i]; */
+		/* 	addKeyInputs[i + 128] = (round + 2) * 128 + i; */
+		/* } */
 	}
-	garble_finish_building(gc, mixColumnOutputs);
+    garble_finish_building(gc, subBytesOutputs);
+	/* garble_finish_building(gc, mixColumnOutputs); */
 }
 
 int
@@ -88,17 +89,18 @@ main(int argc, char *argv[])
     block *outputMap = garble_allocate_blocks(2 * m);
     bool *inputs = calloc(n, sizeof(bool));
     block seed;
-    int times;
+    int times = 100;
+    garble_type_e type;
 
     unsigned char hash[SHA_DIGEST_LENGTH];
 
     if (argc == 2) {
-        times = atoi(argv[1]);
-    } else {
-        times = 100;
+        type = atoi(argv[1]);
+    }  else {
+        type = GARBLE_TYPE_STANDARD;
     }
 
-    buildAESCircuit(&gc);
+    build(&gc, type);
     /* garble_to_file(&gc, AES_CIRCUIT_FILE_NAME); */
     /* garble_delete(&gc); */
 	/* garble_from_file(&gc, AES_CIRCUIT_FILE_NAME); */
@@ -124,7 +126,7 @@ main(int argc, char *argv[])
 
             (void) garble_seed(&seed);
             garble_create_input_labels(inputLabels, n, NULL);
-            buildAESCircuit(&gc2);
+            build(&gc2, type);
             garble_garble(&gc2, inputLabels, NULL);
             assert(garble_check(&gc2, hash) == GARBLE_OK);
             garble_delete(&gc2);
@@ -171,24 +173,6 @@ main(int argc, char *argv[])
         free(timeGarbleMedians);
         free(timeEvalMedians);
     }
-
-    /* { */
-    /*     mytime_t start, end; */
-    /*     start = current_time(); */
-    /*     for (int i = 0; i < 1000; ++i) { */
-    /*         (void) garbleCircuit(&gc, inputLabels, outputMap, type); */
-    /*     } */
-    /*     end = current_time(); */
-    /*     printf("%lu\n", (end - start) / 1000000); */
-
-    /*     start = current_time(); */
-    /*     for (int i = 0; i < 1000; ++i) { */
-    /*         extractLabels(extractedLabels, inputLabels, inputs, gc.n); */
-    /*         evaluate(&gc, extractedLabels, outputMap, type); */
-    /*     } */
-    /*     end = current_time(); */
-    /*     printf("%lu\n", (end - start) / 1000000); */
-    /* } */
 
     garble_delete(&gc);
     free(extractedLabels);

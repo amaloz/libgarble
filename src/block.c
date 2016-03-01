@@ -44,19 +44,13 @@ garble_random_block(void)
 block *
 garble_allocate_blocks(size_t nblocks)
 {
+    int res;
     block *blks = NULL;;
-    (void) posix_memalign((void **) &blks, 128, sizeof(block) * nblocks);
-    if (blks == NULL) {
+    res = posix_memalign((void **) &blks, 128, sizeof(block) * nblocks);
+    if (res == 0) {
+        return blks;
+    } else {
         perror("allocate_blocks");
         return NULL;
-    } else {
-        return blks;
     }
 }
-
-/* void */
-/* print_block(FILE *stream, block blk) */
-/* { */
-/*     uint64_t *val = (uint64_t *) &blk; */
-/*     fprintf(stream, "%016lx%016lx", val[1], val[0]); */
-/* } */

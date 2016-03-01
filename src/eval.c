@@ -35,8 +35,7 @@ hash1(block *A, block tweak, const AES_KEY *K)
 }
 
 static inline void
-hash2(block *A, block *B, block tweak1, block tweak2,
-      const AES_KEY *key)
+hash2(block *A, block *B, block tweak1, block tweak2, const AES_KEY *key)
 {
     block keys[2];
     block masks[2];
@@ -48,6 +47,58 @@ hash2(block *A, block *B, block tweak1, block tweak2,
     AES_ecb_encrypt_blks(keys, 2, key);
     *A = garble_xor(keys[0], masks[0]);
     *B = garble_xor(keys[1], masks[1]);
+}
+
+static void
+_eval_privacy_free(const garble_circuit *gc, block *labels, const AES_KEY *key)
+{
+	for (uint64_t i = 0; i < gc->q; i++) {
+		garble_gate *g = &gc->gates[i];
+		if (g->type == GARBLE_GATE_XOR) {
+			labels[g->output] = garble_xor(labels[g->input0], labels[g->input1]);
+		} else if (g->type == GARBLE_GATE_NOT) {
+            assert(0);
+        } else {
+            block A, B, W;
+            bool sa;
+            block tweak;
+
+            A = labels[g->input0];
+            B = labels[g->input1];
+
+            sa = garble_lsb(A);
+
+            tweak = garble_make_block(2 * i, (long) 0);
+
+            hash1(&A, tweak, key);
+            switch (g->type) {
+            case GARBLE_GATE_AND:
+                if (sa) {
+                    *((char *) &A) |= 0x01;
+                    W = garble_xor(A, gc->table[i]);
+                    W = garble_xor(W, B);
+                } else {
+                    *((char *) &A) &= 0xfe;
+                    W = A;
+                }
+                break;
+            case GARBLE_GATE_OR:
+                if (sa) {
+                    *((char *) &A) |= 0x01;
+                    W = A;
+                } else {
+                    *((char *) &A) &= 0xfe;
+                    W = garble_xor(A, gc->table[i]);
+                    W = garble_xor(W, B);
+                }
+                break;
+            default:
+                assert(false && "unknown gate type");
+                abort();
+            }
+            labels[g->output] = W;
+        }
+	}
 }
 
 static void
@@ -152,8 +203,11 @@ garble_eval(const garble_circuit *gc, const block *inputs, block *outputs)
     case GARBLE_TYPE_HALFGATES:
         _eval_halfgates(gc, labels, &key);
         break;
+    case GARBLE_TYPE_PRIVACY_FREE:
+        _eval_privacy_free(gc, labels, &key);
+        break;
     default:
-        assert(0);
+        assert(false && "unknown garble type");
         abort();
     }
 

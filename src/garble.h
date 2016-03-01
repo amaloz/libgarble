@@ -17,6 +17,7 @@
 typedef enum {
     GARBLE_TYPE_STANDARD,
     GARBLE_TYPE_HALFGATES,
+    GARBLE_TYPE_PRIVACY_FREE,
 } garble_type_e;
 
 typedef enum {
@@ -68,6 +69,8 @@ size_t garble_table_size(const garble_circuit *gc)
         return 3 * sizeof(block);
     case GARBLE_TYPE_HALFGATES:
         return 2 * sizeof(block);
+    case GARBLE_TYPE_PRIVACY_FREE:
+        return sizeof(block);
     }
     return 0;
 }

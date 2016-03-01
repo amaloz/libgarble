@@ -8,8 +8,11 @@ AM_LDFLAGS = \
 	$(top_builddir)/circ/libgarblec.la
 
 check_PROGRAMS = \
-	aes
+	aes	\
+	gates
+
 
 TESTS = $(check_PROGRAMS)
 
 aes_SOURCES = aes.c utils.c
+gates_SOURCES = gates.c utils.c
