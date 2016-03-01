@@ -12,6 +12,7 @@ libgarble_la_SOURCES =	\
 	aes.c 	\
 	block.c	\
 	eval.c	\
+	extend_printf.c	\
 	garble.c	\
 	garble.h	\
 	gc.c	\

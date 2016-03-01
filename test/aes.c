@@ -17,6 +17,7 @@
 */
 
 #include "garble.h"
+#include "garble/block.h"
 #include "circuits.h"
 
 #include "utils.h"

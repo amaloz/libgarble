@@ -25,4 +25,11 @@ garble_random_block(void);
 block *
 garble_allocate_blocks(size_t nblocks);
 
+int
+block_vfprintf(FILE *stream, const char *format, va_list ap);
+int
+block_fprintf(FILE *stream, const char *format, ...);
+int
+block_printf(const char *format, ...);
+
 #endif
