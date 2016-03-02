@@ -4,13 +4,16 @@
 #include <stdint.h>
 
 typedef unsigned long long mytime_t;
-/* typedef uint64_t mytime_t; */
 
 int
 countToN(int *a, int N);
 
 mytime_t
-current_time(void);
+current_time_cycles(void);
+mytime_t
+current_time_ns(void);
+
+
 mytime_t
 median(mytime_t *values, int n);
 double

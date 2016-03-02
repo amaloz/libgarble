@@ -14,14 +14,19 @@ countToN(int *a, int n)
 }
 
 mytime_t
-current_time(void)
+current_time_cycles(void)
 {
     unsigned int hi, lo;
     __asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
     return ((unsigned long long) lo) | (((unsigned long long) hi) << 32);
-    /* struct timespec tp; */
-    /* (void) clock_gettime(CLOCK_MONOTONIC, &tp); */
-    /* return 1000000000 * tp.tv_sec + tp.tv_nsec; */
+}
+
+mytime_t
+current_time_ns(void)
+{
+    struct timespec tp;
+    (void) clock_gettime(CLOCK_MONOTONIC, &tp);
+    return 1000000000 * tp.tv_sec + tp.tv_nsec;
 }
 
 static int

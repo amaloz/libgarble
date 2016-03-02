@@ -156,19 +156,19 @@ main(int argc, char *argv[])
 
         for (int j = 0; j < times; j++) {
             for (int i = 0; i < times; i++) {
-                start = current_time();
+                start = current_time_cycles();
                 {
                     (void) garble_garble(&gc, inputLabels, outputMap);
                 }
-                end = current_time();
+                end = current_time_cycles();
                 timeGarble[i] = end - start;
 
-                start = current_time();
+                start = current_time_cycles();
                 {
                     garble_extract_labels(extractedLabels, inputLabels, inputs, gc.n);
                     garble_eval(&gc, extractedLabels, outputMap);
                 }
-                end = current_time();
+                end = current_time_cycles();
                 timeEval[i] = end - start;
             }
             timeGarbleMedians[j] = ((double) median(timeGarble, times)) / gc.q;
@@ -185,15 +185,15 @@ main(int argc, char *argv[])
     }
 
     {
-        mytime_t start, end;
+        unsigned long long start, end;
 
-        start = current_time();
+        start = current_time_ns();
         for (int i = 0; i < 1000; ++i) {
             (void) garble_garble(&gc, inputLabels, outputMap);
             garble_extract_labels(extractedLabels, inputLabels, inputs, gc.n);
             garble_eval(&gc, extractedLabels, outputMap);
         }
-        end = current_time();
+        end = current_time_ns();
         printf("%llu\n", (end - start) / 1000);
     }
 
