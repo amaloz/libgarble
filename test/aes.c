@@ -184,6 +184,19 @@ main(int argc, char *argv[])
         free(timeEvalMedians);
     }
 
+    {
+        mytime_t start, end;
+
+        start = current_time();
+        for (int i = 0; i < 1000; ++i) {
+            (void) garble_garble(&gc, inputLabels, outputMap);
+            garble_extract_labels(extractedLabels, inputLabels, inputs, gc.n);
+            garble_eval(&gc, extractedLabels, outputMap);
+        }
+        end = current_time();
+        printf("%llu\n", (end - start) / 1000);
+    }
+
     garble_delete(&gc);
     free(inputs);
     free(extractedLabels);
