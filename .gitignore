@@ -38,8 +38,6 @@ Makefile.in
 .libs
 stamp-h1
 autom4te.cache
-build
-config.h.in*
 libtool
 Makefile
 aclocal.m4
