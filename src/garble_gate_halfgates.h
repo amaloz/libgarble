@@ -42,7 +42,6 @@ garble_gate_halfgates(const garble_gate *g, block A0, block A1, block B0,
             HB0 = garble_xor(keys[2], masks[2]);
             HB1 = garble_xor(keys[3], masks[3]);
         }
-        /* hash4(&HA0, &HA1, &HB0, &HB1, tweak1, tweak2, key); */
         switch (g->type) {
         case GARBLE_GATE_AND:
             table[0] = garble_xor(HA0, HA1);
