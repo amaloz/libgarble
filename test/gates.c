@@ -33,8 +33,6 @@ build_circuit(garble_circuit *gc, int n, int nlayers, garble_type_e type,
     }
     garble_finish_building(gc, outputs);
 
-    printf("n = %lu, q = %lu, r = %lu\n", gc->n, gc->q, gc->r);
-
     free(inputs);
     free(outputs);
 }
@@ -188,11 +186,11 @@ main(int argc, char *argv[])
         break;
     }
 
-    fprintf(stderr, "Testing AND\n");
+    fprintf(stderr, "***** Testing AND *****\n");
     test_circuit(ninputs, nlayers, type, garble_gate_AND);
-    fprintf(stderr, "Testing OR\n");
+    fprintf(stderr, "***** Testing OR *****\n");
     test_circuit(ninputs, nlayers, type, garble_gate_OR);
-    fprintf(stderr, "Testing XOR\n");
+    fprintf(stderr, "***** Testing XOR *****\n");
     test_circuit(ninputs, nlayers, type, garble_gate_XOR);
 
     return 0;

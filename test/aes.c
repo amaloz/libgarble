@@ -55,11 +55,11 @@ build(garble_circuit *gc, garble_type_e type)
 
 	countToN(addKeyInputs, 256);
 
-	for (int round = 0; round < roundLimit; round++) {
+	for (int round = 0; round < roundLimit; ++round) {
 
 		AddRoundKey(gc, &ctxt, addKeyInputs, addKeyOutputs);
 
-		for (int i = 0; i < 16; i++) {
+		for (int i = 0; i < 16; ++i) {
 			SubBytes(gc, &ctxt, addKeyOutputs + 8 * i, subBytesOutputs + 8 * i);
 		}
 
@@ -118,8 +118,11 @@ main(int argc, char *argv[])
 	/* garble_from_file(&gc, AES_CIRCUIT_FILE_NAME); */
 
     seed = garble_seed(NULL);
-    garble_create_input_labels(inputLabels, n, NULL);
-    garble_garble(&gc, inputLabels, outputMap);
+    garble_garble(&gc, NULL, outputMap);
+    for (uint64_t i = 0; i < gc.n; ++i) {
+        inputLabels[2 * i] = gc.wires[i].label0;
+        inputLabels[2 * i + 1] = gc.wires[i].label1;
+    }
     garble_hash(&gc, hash);
 
     {
@@ -135,9 +138,8 @@ main(int argc, char *argv[])
             garble_circuit gc2;
 
             (void) garble_seed(&seed);
-            garble_create_input_labels(inputLabels, n, NULL);
             build(&gc2, type);
-            garble_garble(&gc2, inputLabels, NULL);
+            garble_garble(&gc2, NULL, NULL);
             assert(garble_check(&gc2, hash) == GARBLE_OK);
             garble_delete(&gc2);
         }
@@ -183,6 +185,7 @@ main(int argc, char *argv[])
     }
 
     garble_delete(&gc);
+    free(inputs);
     free(extractedLabels);
     free(outputMap);
     free(inputLabels);
