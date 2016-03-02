@@ -53,6 +53,15 @@ _garble_privacy_free(garble_circuit *gc, const AES_KEY *key, block delta)
 		B0 = gc->wires[g->input1].label0;
         B1 = gc->wires[g->input1].label1;
 
+#ifdef DEBUG
+        if ((*((char *) &A0) & 0x01) == 1
+            || (*((char *) &B0) & 0x01) == 1
+            || (*((char *) &A1) & 0x01) == 0
+            || (*((char *) &B1) & 0x01) == 0) {
+            assert(false && "invalid lsb in block");
+        }
+#endif
+
         if (g->type == GARBLE_GATE_XOR) {
             gc->wires[g->output].label0 = garble_xor(A0, B0);
             gc->wires[g->output].label1 =
@@ -125,7 +134,7 @@ int
 garble_garble(garble_circuit *gc, const block *inputs, block *outputs)
 {
     AES_KEY key;
-    block delta, other;
+    block delta;
 
     if (gc == NULL)
         return GARBLE_ERR;
@@ -158,11 +167,19 @@ garble_garble(garble_circuit *gc, const block *inputs, block *outputs)
 #endif
 
     gc->fixed_label = garble_random_block();
-    *((char *) &gc->fixed_label) &= 0xfe;
-    other = garble_xor(gc->fixed_label, delta);
     for (uint64_t i = 0; i < gc->n_fixed_wires; ++i) {
-        gc->wires[gc->fixed_wires[i].idx].label0 = gc->fixed_label;
-        gc->wires[gc->fixed_wires[i].idx].label1 = other;
+        switch (gc->fixed_wires[i].type) {
+        case GARBLE_FIXED_WIRE_ZERO:
+            *((char *) &gc->fixed_label) &= 0xfe;
+            gc->wires[gc->fixed_wires[i].idx].label0 = gc->fixed_label;
+            gc->wires[gc->fixed_wires[i].idx].label1 = garble_xor(gc->fixed_label, delta);
+            break;
+        case GARBLE_FIXED_WIRE_ONE:
+            *((char *) &gc->fixed_label) |= 0x01;
+            gc->wires[gc->fixed_wires[i].idx].label0 = garble_xor(gc->fixed_label, delta);
+            gc->wires[gc->fixed_wires[i].idx].label1 = gc->fixed_label;
+            break;
+        }
     }
 
     gc->global_key = garble_random_block();

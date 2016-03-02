@@ -16,11 +16,11 @@
 
 */
 
-#include <assert.h>
-#include <malloc.h>
-
 #include "garble.h"
 #include "garble/aes.h"
+
+#include <assert.h>
+#include <string.h>
 
 static inline void
 hash1(block *A, block tweak, const AES_KEY *K)
@@ -186,13 +186,20 @@ garble_eval(const garble_circuit *gc, const block *inputs, block *outputs)
     labels = garble_allocate_blocks(gc->r);
 
     /* Set input wire labels */
-	for (uint64_t i = 0; i < gc->n; ++i) {
-        labels[i] = inputs[i];
-	}
+    memcpy(labels, inputs, gc->n * sizeof inputs[0]);
 
     /* Set fixed wire labels */
     for (uint64_t i = 0; i < gc->n_fixed_wires; ++i) {
-        labels[gc->fixed_wires[i].idx] = gc->fixed_label;
+        switch (gc->fixed_wires[i].type) {
+        case GARBLE_FIXED_WIRE_ZERO:
+            *((char *) &gc->fixed_label) &= 0xfe;
+            labels[gc->fixed_wires[i].idx] = gc->fixed_label;
+            break;
+        case GARBLE_FIXED_WIRE_ONE:
+            *((char *) &gc->fixed_label) |= 0x01;
+            labels[gc->fixed_wires[i].idx] = gc->fixed_label;
+            break;
+        }
     }
 
     /* Process gates */
@@ -206,9 +213,6 @@ garble_eval(const garble_circuit *gc, const block *inputs, block *outputs)
     case GARBLE_TYPE_PRIVACY_FREE:
         _eval_privacy_free(gc, labels, &key);
         break;
-    default:
-        assert(false && "unknown garble type");
-        abort();
     }
 
     /* Set output wire labels */
