@@ -454,7 +454,6 @@ INV_GF16(garble_circuit *gc, garble_context *ctxt, const int *inputs,
 	int tempXORq12 = garble_next_wire(ctxt);
 	int tempXORq13 = garble_next_wire(ctxt);
 	int tempXORq14 = garble_next_wire(ctxt);
-	/* int tempXORq15 = */ garble_next_wire(ctxt);
 
 	garble_gate_XOR(gc, and01Output, and02Output, tempXORq11);
 	garble_gate_XOR(gc, and12Output, tempXORq11, tempXORq12);
@@ -466,7 +465,6 @@ INV_GF16(garble_circuit *gc, garble_context *ctxt, const int *inputs,
 	int tempXORq22 = garble_next_wire(ctxt);
 	int tempXORq23 = garble_next_wire(ctxt);
 	int tempXORq24 = garble_next_wire(ctxt);
-	/* int tempXORq25 = */ garble_next_wire(ctxt);
 
 	garble_gate_XOR(gc, and01Output, inputs[2], tempXORq21);
 	garble_gate_XOR(gc, and02Output, tempXORq21, tempXORq22);
@@ -476,9 +474,6 @@ INV_GF16(garble_circuit *gc, garble_context *ctxt, const int *inputs,
 
 	int tempXORq31 = garble_next_wire(ctxt);
 	int tempXORq32 = garble_next_wire(ctxt);
-	/* int tempXORq33 = */ garble_next_wire(ctxt);
-	/* int tempXORq34 = */ garble_next_wire(ctxt);
-	/* int tempXORq35 = */ garble_next_wire(ctxt);
 
 	garble_gate_XOR(gc, AOutput, and03Output, tempXORq31);
 	garble_gate_XOR(gc, and13Output, tempXORq31, tempXORq32);
