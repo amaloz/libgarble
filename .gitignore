@@ -31,7 +31,6 @@
 # Debug files
 *.dSYM/
 
-Makefile.in
 *.log
 *.status
 .deps
