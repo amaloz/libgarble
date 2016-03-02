@@ -12,24 +12,24 @@ garble_next_wire(garble_context *ctxt)
 }
 
 int
-garble_new(garble_circuit *gc, uint64_t n, uint64_t m, uint64_t q, uint64_t r,
-           garble_type_e type)
+garble_new(garble_circuit *gc, uint64_t n, uint64_t m, garble_type_e type)
 {
     if (gc == NULL)
         return GARBLE_ERR;
 
-    gc->gates = calloc(q, sizeof(garble_gate));
-    gc->fixed_wires = calloc(r, sizeof(garble_fixed_wire));
+    gc->gates = NULL;
+    gc->fixed_wires = NULL;
     gc->outputs = calloc(m, sizeof(int));
     gc->wires = NULL;
     gc->table = NULL;
 
     gc->type = type;
+    gc->n = n;
 	gc->m = m;
-	gc->n = n;
-    /* q is set in garble_finish_building() */
+    /* q is incremented in circ/gates.c:_gate */
 	gc->q = 0;
-	gc->r = r;
+    /* r is set in garble_finish_building() */
+	gc->r = 0;
     gc->n_fixed_wires = 0;
     return GARBLE_OK;
 }
@@ -55,11 +55,15 @@ void
 garble_start_building(garble_circuit *gc, garble_context *ctxt)
 {
     ctxt->wire_index = gc->n; /* start at first non-input wire */
+    ctxt->n_fixed_wires = 0;
+    ctxt->n_gates = 0;
 }
 
 void
-garble_finish_building(garble_circuit *gc, const int *outputs)
+garble_finish_building(garble_circuit *gc, garble_context *ctxt,
+                       const int *outputs)
 {
+    gc->r = ctxt->wire_index + gc->q;
 	for (uint64_t i = 0; i < gc->m; ++i) {
 		gc->outputs[i] = outputs[i];
 	}

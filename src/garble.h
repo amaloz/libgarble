@@ -35,7 +35,9 @@ typedef struct {
 } garble_wire;
 
 typedef struct {
+    /* the type of gate this is */
     garble_gate_type_e type;
+    /* the input/output wires associated with this gate */
 	uint64_t input0, input1, output;
 } garble_gate;
 
@@ -77,18 +79,20 @@ size_t garble_table_size(const garble_circuit *gc)
 
 typedef struct {
 	uint64_t wire_index;
+    uint64_t n_fixed_wires;
+    uint64_t n_gates;
 } garble_context;
 
 int
-garble_new(garble_circuit *gc, uint64_t n, uint64_t m, uint64_t q, uint64_t r,
-           garble_type_e type);
+garble_new(garble_circuit *gc, uint64_t n, uint64_t m, garble_type_e type);
 void
 garble_delete(garble_circuit *gc);
 
 void
 garble_start_building(garble_circuit *gc, garble_context *ctxt);
 void
-garble_finish_building(garble_circuit *gc, const int *outputs);
+garble_finish_building(garble_circuit *gc, garble_context *ctxt,
+                       const int *outputs);
 
 int
 garble_garble(garble_circuit *gc, const block *inputs, block *outputs);

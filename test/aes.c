@@ -42,15 +42,13 @@ build(garble_circuit *gc, garble_type_e type)
 {
 	garble_context ctxt;
 
-    uint64_t q = 50000;
-	uint64_t r = 50000;
     int addKeyInputs[256];
     int addKeyOutputs[128];
     int subBytesOutputs[128];
     int shiftRowsOutputs[128];
     int mixColumnOutputs[128];
 
-	garble_new(gc, n, m, q, r, type);
+	garble_new(gc, n, m, type);
 	garble_start_building(gc, &ctxt);
 
 	countToN(addKeyInputs, 256);
@@ -75,7 +73,7 @@ build(garble_circuit *gc, garble_type_e type)
 			addKeyInputs[i + 128] = (round + 2) * 128 + i;
 		}
 	}
-	garble_finish_building(gc, mixColumnOutputs);
+	garble_finish_building(gc, &ctxt, mixColumnOutputs);
 }
 
 int

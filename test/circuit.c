@@ -14,10 +14,10 @@ build_GF4MULCircuit(garble_circuit *gc, garble_type_e type)
     int outputs[2];
 
     countToN(inputs, 4);
-    garble_new(gc, 4, 2, 7, 11, type);
+    garble_new(gc, 4, 2, type);
     garble_start_building(gc, &ctxt);
     GF4MULCircuit(gc, &ctxt, inputs, outputs);
-    garble_finish_building(gc, outputs);
+    garble_finish_building(gc, &ctxt, outputs);
 }
 
 static void
@@ -29,10 +29,11 @@ build_GF16MULCircuit(garble_circuit *gc, garble_type_e type)
     int outputs[4];
 
     countToN(inputs, 4);
-    garble_new(gc, 4, 4, 100, 100, type);
+    garble_new(gc, 4, 4, type);
     garble_start_building(gc, &ctxt);
     GF16MULCircuit(gc, &ctxt, inputs, outputs);
-    garble_finish_building(gc, outputs);
+    garble_finish_building(gc, &ctxt, outputs);
+    printf("%lu %lu %lu %lu\n", gc->n, gc->m, gc->q, gc->r);
 }
 
 static void
@@ -44,10 +45,10 @@ build_GF256InvCircuit(garble_circuit *gc, garble_type_e type)
     int outputs[8];
 
     countToN(inputs, 8);
-    garble_new(gc, 8, 8, 1000, 1000, type);
+    garble_new(gc, 8, 8, type);
     garble_start_building(gc, &ctxt);
     GF256InvCircuit(gc, &ctxt, inputs, outputs);
-    garble_finish_building(gc, outputs);
+    garble_finish_building(gc, &ctxt, outputs);
 }
 
 static void

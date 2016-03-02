@@ -45,7 +45,7 @@ EncoderZeroCircuit(garble_circuit *gc, garble_context *ctxt,
 		for (int j = 0; j < 8; j++) {
 			if (fbits(enc[i], j)) {
 				int wire = garble_next_wire(ctxt);
-				garble_gate_XOR(gc, wires[j], inputs[i], wire);
+				garble_gate_XOR(gc, ctxt, wires[j], inputs[i], wire);
 				wires[j] = wire;
 			}
 		}
@@ -67,7 +67,7 @@ EncoderOneCircuit(garble_circuit *gc, garble_context *ctxt, const int inputs[8],
 		for (int j = 0; j < 8; j++) {
 			if (fbits(enc[i], j)) {
 				int wire = garble_next_wire(ctxt);
-				garble_gate_XOR(gc, wires[j], inputs[i], wire);
+				garble_gate_XOR(gc, ctxt, wires[j], inputs[i], wire);
 				wires[j] = wire;
 			}
 		}
@@ -76,7 +76,6 @@ EncoderOneCircuit(garble_circuit *gc, garble_context *ctxt, const int inputs[8],
 		outputs[i] = wires[i];
 	}
 }
-
 
 void
 AddRoundKey(garble_circuit *gc, garble_context *ctxt, const int inputs[256],
@@ -155,25 +154,25 @@ MAP(garble_circuit *gc, garble_context *ctxt, const int *inputs, int *outputs)
 	for (i = 0; i < 10; i++)
 		tempW[i] = garble_next_wire(ctxt);
 
-	garble_gate_XOR(gc, inputs[1], inputs[7], tempW[A]);
-	garble_gate_XOR(gc, inputs[5], inputs[7], tempW[B]);
-	garble_gate_XOR(gc, inputs[4], inputs[6], tempW[C]);
+	garble_gate_XOR(gc, ctxt, inputs[1], inputs[7], tempW[A]);
+	garble_gate_XOR(gc, ctxt, inputs[5], inputs[7], tempW[B]);
+	garble_gate_XOR(gc, ctxt, inputs[4], inputs[6], tempW[C]);
 
 	int temp = garble_next_wire(ctxt);
-	garble_gate_XOR(gc, tempW[C], inputs[0], temp);
-	garble_gate_XOR(gc, temp, inputs[5], tempW[L0]);
+	garble_gate_XOR(gc, ctxt, tempW[C], inputs[0], temp);
+	garble_gate_XOR(gc, ctxt, temp, inputs[5], tempW[L0]);
 
-	garble_gate_XOR(gc, inputs[1], inputs[2], tempW[L1]);
+	garble_gate_XOR(gc, ctxt, inputs[1], inputs[2], tempW[L1]);
 
-	garble_gate_XOR(gc, inputs[4], inputs[2], tempW[L3]);
+	garble_gate_XOR(gc, ctxt, inputs[4], inputs[2], tempW[L3]);
 
-	garble_gate_XOR(gc, inputs[5], tempW[C], tempW[H0]);
+	garble_gate_XOR(gc, ctxt, inputs[5], tempW[C], tempW[H0]);
 
-	garble_gate_XOR(gc, inputs[A], inputs[C], tempW[H1]);
+	garble_gate_XOR(gc, ctxt, inputs[A], inputs[C], tempW[H1]);
 
 	int temp2 = garble_next_wire(ctxt);
-	garble_gate_XOR(gc, tempW[B], inputs[2], temp2);
-	garble_gate_XOR(gc, temp2, inputs[3], tempW[H2]);
+	garble_gate_XOR(gc, ctxt, tempW[B], inputs[2], temp2);
+	garble_gate_XOR(gc, ctxt, temp2, inputs[3], tempW[H2]);
 
 	outputs[0] = tempW[L0];
 	outputs[1] = tempW[L1];
@@ -217,40 +216,40 @@ INVMAP(garble_circuit *gc, garble_context *ctxt, int* inputs,
 	for (i = 0; i < 16; i++)
 		tempW[i] = garble_next_wire(ctxt);
 
-	garble_gate_XOR(gc, inputs[l1], inputs[h3], tempW[A]);
+	garble_gate_XOR(gc, ctxt, inputs[l1], inputs[h3], tempW[A]);
 
-	garble_gate_XOR(gc, inputs[h1], inputs[h0], tempW[B]);
+	garble_gate_XOR(gc, ctxt, inputs[h1], inputs[h0], tempW[B]);
 
-	garble_gate_XOR(gc, inputs[l0], inputs[h0], tempW[a0]);
+	garble_gate_XOR(gc, ctxt, inputs[l0], inputs[h0], tempW[a0]);
 
-	garble_gate_XOR(gc, inputs[h3], tempW[B], tempW[a1]);
+	garble_gate_XOR(gc, ctxt, inputs[h3], tempW[B], tempW[a1]);
 
-	garble_gate_XOR(gc, tempW[A], tempW[B], tempW[a2]);
+	garble_gate_XOR(gc, ctxt, tempW[A], tempW[B], tempW[a2]);
 
 	int temp = garble_next_wire(ctxt);
-	garble_gate_XOR(gc, tempW[B], inputs[l1], temp);
+	garble_gate_XOR(gc, ctxt, tempW[B], inputs[l1], temp);
 
-	garble_gate_XOR(gc, temp, inputs[h2], tempW[a3]);
-
-	temp = garble_next_wire(ctxt);
-	garble_gate_XOR(gc, tempW[A], tempW[B], temp);
-
-	garble_gate_XOR(gc, inputs[l3], temp, tempW[a4]);
-
-	garble_gate_XOR(gc, inputs[l2], tempW[B], tempW[a5]);
+	garble_gate_XOR(gc, ctxt, temp, inputs[h2], tempW[a3]);
 
 	temp = garble_next_wire(ctxt);
-	garble_gate_XOR(gc, tempW[A], inputs[l2], temp);
+	garble_gate_XOR(gc, ctxt, tempW[A], tempW[B], temp);
+
+	garble_gate_XOR(gc, ctxt, inputs[l3], temp, tempW[a4]);
+
+	garble_gate_XOR(gc, ctxt, inputs[l2], tempW[B], tempW[a5]);
+
+	temp = garble_next_wire(ctxt);
+	garble_gate_XOR(gc, ctxt, tempW[A], inputs[l2], temp);
 
 	int temp2 = garble_next_wire(ctxt);
-	garble_gate_XOR(gc, temp, inputs[l3], temp2);
-	garble_gate_XOR(gc, temp2, inputs[h0], tempW[a6]);
+	garble_gate_XOR(gc, ctxt, temp, inputs[l3], temp2);
+	garble_gate_XOR(gc, ctxt, temp2, inputs[h0], tempW[a6]);
 
 	temp2 = garble_next_wire(ctxt);
 
-	garble_gate_XOR(gc, tempW[B], inputs[l2], temp2);
+	garble_gate_XOR(gc, ctxt, tempW[B], inputs[l2], temp2);
 
-	garble_gate_XOR(gc, temp2, inputs[h3], tempW[a7]);
+	garble_gate_XOR(gc, ctxt, temp2, inputs[h3], tempW[a7]);
 
 	outputs[0] = tempW[a0];
 	outputs[1] = tempW[a1];
@@ -307,54 +306,54 @@ MULTGF16(garble_circuit *gc, garble_context *ctxt, int* inputs,
 	for (i = 0; i < 24; i++)
 		tempW[i] = garble_next_wire(ctxt);
 
-	garble_gate_XOR(gc, inputs[a3], inputs[a0], tempW[A]);
-	garble_gate_XOR(gc, inputs[a3], inputs[a2], tempW[B]);
-	garble_gate_XOR(gc, inputs[a1], inputs[a2], tempW[C]);
-	garble_gate_AND(gc, inputs[a0], inputs[b0], tempW[and00]);
-	garble_gate_AND(gc, inputs[a3], inputs[b1], tempW[and31]);
-	garble_gate_AND(gc, inputs[a2], inputs[b2], tempW[and22]);
+	garble_gate_XOR(gc, ctxt, inputs[a3], inputs[a0], tempW[A]);
+	garble_gate_XOR(gc, ctxt, inputs[a3], inputs[a2], tempW[B]);
+	garble_gate_XOR(gc, ctxt, inputs[a1], inputs[a2], tempW[C]);
+	garble_gate_AND(gc, ctxt, inputs[a0], inputs[b0], tempW[and00]);
+	garble_gate_AND(gc, ctxt, inputs[a3], inputs[b1], tempW[and31]);
+	garble_gate_AND(gc, ctxt, inputs[a2], inputs[b2], tempW[and22]);
 
-	garble_gate_AND(gc, inputs[a1], inputs[b3], tempW[and13]);
+	garble_gate_AND(gc, ctxt, inputs[a1], inputs[b3], tempW[and13]);
 
 	int temp1 = garble_next_wire(ctxt);
 	int temp2 = garble_next_wire(ctxt);
-	garble_gate_XOR(gc, tempW[and00], tempW[and31], temp1);
+	garble_gate_XOR(gc, ctxt, tempW[and00], tempW[and31], temp1);
 
-	garble_gate_XOR(gc, tempW[and13], tempW[and22], temp2);
-	garble_gate_XOR(gc, temp1, temp2, tempW[q0]);
-	garble_gate_AND(gc, inputs[a1], inputs[b0], tempW[and10]);
-	garble_gate_AND(gc, tempW[A], inputs[b1], tempW[andA1]);
-	garble_gate_AND(gc, tempW[B], inputs[b2], tempW[andB2]);
-	garble_gate_AND(gc, tempW[C], inputs[b3], tempW[andC3]);
-
-	temp1 = garble_next_wire(ctxt);
-	temp2 = garble_next_wire(ctxt);
-
-	garble_gate_XOR(gc, tempW[and10], tempW[andA1], temp1);
-	garble_gate_XOR(gc, tempW[andB2], tempW[andC3], temp2);
-	garble_gate_XOR(gc, temp1, temp2, tempW[q1]);
-	garble_gate_AND(gc, inputs[a2], inputs[b0], tempW[and20]);
-	garble_gate_AND(gc, inputs[a1], inputs[b1], tempW[and11]);
-	garble_gate_AND(gc, tempW[A], inputs[b2], tempW[andA2]);
-	garble_gate_AND(gc, tempW[B], inputs[b3], tempW[andB3]);
+	garble_gate_XOR(gc, ctxt, tempW[and13], tempW[and22], temp2);
+	garble_gate_XOR(gc, ctxt, temp1, temp2, tempW[q0]);
+	garble_gate_AND(gc, ctxt, inputs[a1], inputs[b0], tempW[and10]);
+	garble_gate_AND(gc, ctxt, tempW[A], inputs[b1], tempW[andA1]);
+	garble_gate_AND(gc, ctxt, tempW[B], inputs[b2], tempW[andB2]);
+	garble_gate_AND(gc, ctxt, tempW[C], inputs[b3], tempW[andC3]);
 
 	temp1 = garble_next_wire(ctxt);
 	temp2 = garble_next_wire(ctxt);
 
-	garble_gate_XOR(gc, tempW[and20], tempW[and11], temp1);
-	garble_gate_XOR(gc, tempW[andA2], tempW[andB3], temp2);
-	garble_gate_XOR(gc, temp1, temp2, tempW[q2]);
-	garble_gate_AND(gc, inputs[a3], inputs[b0], tempW[and30]);
-	garble_gate_AND(gc, inputs[a2], inputs[b1], tempW[and21]);
-	garble_gate_AND(gc, inputs[a1], inputs[b2], tempW[and12]);
-	garble_gate_AND(gc, tempW[A], inputs[b3], tempW[andA3]);
+	garble_gate_XOR(gc, ctxt, tempW[and10], tempW[andA1], temp1);
+	garble_gate_XOR(gc, ctxt, tempW[andB2], tempW[andC3], temp2);
+	garble_gate_XOR(gc, ctxt, temp1, temp2, tempW[q1]);
+	garble_gate_AND(gc, ctxt, inputs[a2], inputs[b0], tempW[and20]);
+	garble_gate_AND(gc, ctxt, inputs[a1], inputs[b1], tempW[and11]);
+	garble_gate_AND(gc, ctxt, tempW[A], inputs[b2], tempW[andA2]);
+	garble_gate_AND(gc, ctxt, tempW[B], inputs[b3], tempW[andB3]);
 
 	temp1 = garble_next_wire(ctxt);
 	temp2 = garble_next_wire(ctxt);
 
-	garble_gate_XOR(gc, tempW[and30], tempW[and21], temp1);
-	garble_gate_XOR(gc, tempW[andA3], tempW[and12], temp2);
-	garble_gate_XOR(gc, temp1, temp2, tempW[q3]);
+	garble_gate_XOR(gc, ctxt, tempW[and20], tempW[and11], temp1);
+	garble_gate_XOR(gc, ctxt, tempW[andA2], tempW[andB3], temp2);
+	garble_gate_XOR(gc, ctxt, temp1, temp2, tempW[q2]);
+	garble_gate_AND(gc, ctxt, inputs[a3], inputs[b0], tempW[and30]);
+	garble_gate_AND(gc, ctxt, inputs[a2], inputs[b1], tempW[and21]);
+	garble_gate_AND(gc, ctxt, inputs[a1], inputs[b2], tempW[and12]);
+	garble_gate_AND(gc, ctxt, tempW[A], inputs[b3], tempW[andA3]);
+
+	temp1 = garble_next_wire(ctxt);
+	temp2 = garble_next_wire(ctxt);
+
+	garble_gate_XOR(gc, ctxt, tempW[and30], tempW[and21], temp1);
+	garble_gate_XOR(gc, ctxt, tempW[andA3], tempW[and12], temp2);
+	garble_gate_XOR(gc, ctxt, temp1, temp2, tempW[q3]);
 
 	outputs[0] = tempW[q0];
 	outputs[1] = tempW[q1];
@@ -369,11 +368,11 @@ SquareCircuit(garble_circuit *gc, garble_context *ctxt, int inputs[4],
               int outputs[4])
 {
 	outputs[0] = garble_next_wire(ctxt);
-	garble_gate_XOR(gc, inputs[0], inputs[2], outputs[0]);
+	garble_gate_XOR(gc, ctxt, inputs[0], inputs[2], outputs[0]);
 
 	outputs[1] = inputs[2];
 	outputs[2] = garble_next_wire(ctxt);
-	garble_gate_XOR(gc, inputs[1], inputs[3], outputs[2]);
+	garble_gate_XOR(gc, ctxt, inputs[1], inputs[3], outputs[2]);
 
 	outputs[3] = inputs[3];
 	return 0;
@@ -389,11 +388,11 @@ MULTE_GF16(garble_circuit *gc, garble_context *ctxt,
 	int outputq2 = garble_next_wire(ctxt);
 	int outputq3 = garble_next_wire(ctxt);
 
-	garble_gate_XOR(gc, inputs[0], inputs[1], outputA);
-	garble_gate_XOR(gc, inputs[2], inputs[3], outputB);
-	garble_gate_XOR(gc, outputB, inputs[1], outputq0);
-	garble_gate_XOR(gc, outputA, inputs[2], outputq2);
-	garble_gate_XOR(gc, outputB, outputA, outputq3);
+	garble_gate_XOR(gc, ctxt, inputs[0], inputs[1], outputA);
+	garble_gate_XOR(gc, ctxt, inputs[2], inputs[3], outputB);
+	garble_gate_XOR(gc, ctxt, outputB, inputs[1], outputq0);
+	garble_gate_XOR(gc, ctxt, outputA, inputs[2], outputq2);
+	garble_gate_XOR(gc, ctxt, outputB, outputA, outputq3);
 
 	outputs[0] = outputq0;
 	outputs[1] = outputA;
@@ -424,60 +423,60 @@ INV_GF16(garble_circuit *gc, garble_context *ctxt, const int *inputs,
 	int and023Output = garble_next_wire(ctxt);
 	int and013Output = garble_next_wire(ctxt);
 
-	garble_gate_AND(gc, inputs[0], inputs[1], and01Output);
-	garble_gate_AND(gc, inputs[0], inputs[2], and02Output);
-	garble_gate_AND(gc, inputs[0], inputs[3], and03Output);
-	garble_gate_AND(gc, inputs[2], inputs[1], and12Output);
-	garble_gate_AND(gc, inputs[3], inputs[1], and13Output);
-	garble_gate_AND(gc, inputs[2], inputs[3], and23Output);
-	garble_gate_AND(gc, inputs[2], and01Output, and012Output);
-	garble_gate_AND(gc, inputs[3], and12Output, and123Output);
-	garble_gate_AND(gc, inputs[3], and02Output, and023Output);
-	garble_gate_AND(gc, inputs[3], and01Output, and013Output);
+	garble_gate_AND(gc, ctxt, inputs[0], inputs[1], and01Output);
+	garble_gate_AND(gc, ctxt, inputs[0], inputs[2], and02Output);
+	garble_gate_AND(gc, ctxt, inputs[0], inputs[3], and03Output);
+	garble_gate_AND(gc, ctxt, inputs[2], inputs[1], and12Output);
+	garble_gate_AND(gc, ctxt, inputs[3], inputs[1], and13Output);
+	garble_gate_AND(gc, ctxt, inputs[2], inputs[3], and23Output);
+	garble_gate_AND(gc, ctxt, inputs[2], and01Output, and012Output);
+	garble_gate_AND(gc, ctxt, inputs[3], and12Output, and123Output);
+	garble_gate_AND(gc, ctxt, inputs[3], and02Output, and023Output);
+	garble_gate_AND(gc, ctxt, inputs[3], and01Output, and013Output);
 
 	int tempXORA1 = garble_next_wire(ctxt);
-	garble_gate_XOR(gc, inputs[1], inputs[2], tempXORA1);
+	garble_gate_XOR(gc, ctxt, inputs[1], inputs[2], tempXORA1);
 	int tempXORA2 = garble_next_wire(ctxt);
-	garble_gate_XOR(gc, inputs[3], and123Output, tempXORA2);
-	garble_gate_XOR(gc, tempXORA1, tempXORA2, AOutput);
+	garble_gate_XOR(gc, ctxt, inputs[3], and123Output, tempXORA2);
+	garble_gate_XOR(gc, ctxt, tempXORA1, tempXORA2, AOutput);
 
 	int tempXORq01 = garble_next_wire(ctxt);
 	int tempXORq02 = garble_next_wire(ctxt);
 	int tempXORq03 = garble_next_wire(ctxt);
 
-	garble_gate_XOR(gc, inputs[0], AOutput, tempXORq01);
-	garble_gate_XOR(gc, and02Output, tempXORq01, tempXORq02);
-	garble_gate_XOR(gc, and12Output, tempXORq02, tempXORq03);
-	garble_gate_XOR(gc, and012Output, tempXORq03, q0Output);
+	garble_gate_XOR(gc, ctxt, inputs[0], AOutput, tempXORq01);
+	garble_gate_XOR(gc, ctxt, and02Output, tempXORq01, tempXORq02);
+	garble_gate_XOR(gc, ctxt, and12Output, tempXORq02, tempXORq03);
+	garble_gate_XOR(gc, ctxt, and012Output, tempXORq03, q0Output);
 
 	int tempXORq11 = garble_next_wire(ctxt);
 	int tempXORq12 = garble_next_wire(ctxt);
 	int tempXORq13 = garble_next_wire(ctxt);
 	int tempXORq14 = garble_next_wire(ctxt);
 
-	garble_gate_XOR(gc, and01Output, and02Output, tempXORq11);
-	garble_gate_XOR(gc, and12Output, tempXORq11, tempXORq12);
-	garble_gate_XOR(gc, inputs[3], tempXORq12, tempXORq13);
-	garble_gate_XOR(gc, and13Output, tempXORq13, tempXORq14);
-	garble_gate_XOR(gc, and013Output, tempXORq14, q1Output);
+	garble_gate_XOR(gc, ctxt, and01Output, and02Output, tempXORq11);
+	garble_gate_XOR(gc, ctxt, and12Output, tempXORq11, tempXORq12);
+	garble_gate_XOR(gc, ctxt, inputs[3], tempXORq12, tempXORq13);
+	garble_gate_XOR(gc, ctxt, and13Output, tempXORq13, tempXORq14);
+	garble_gate_XOR(gc, ctxt, and013Output, tempXORq14, q1Output);
 
 	int tempXORq21 = garble_next_wire(ctxt);
 	int tempXORq22 = garble_next_wire(ctxt);
 	int tempXORq23 = garble_next_wire(ctxt);
 	int tempXORq24 = garble_next_wire(ctxt);
 
-	garble_gate_XOR(gc, and01Output, inputs[2], tempXORq21);
-	garble_gate_XOR(gc, and02Output, tempXORq21, tempXORq22);
-	garble_gate_XOR(gc, inputs[3], tempXORq22, tempXORq23);
-	garble_gate_XOR(gc, and03Output, tempXORq23, tempXORq24);
-	garble_gate_XOR(gc, and023Output, tempXORq24, q2Output);
+	garble_gate_XOR(gc, ctxt, and01Output, inputs[2], tempXORq21);
+	garble_gate_XOR(gc, ctxt, and02Output, tempXORq21, tempXORq22);
+	garble_gate_XOR(gc, ctxt, inputs[3], tempXORq22, tempXORq23);
+	garble_gate_XOR(gc, ctxt, and03Output, tempXORq23, tempXORq24);
+	garble_gate_XOR(gc, ctxt, and023Output, tempXORq24, q2Output);
 
 	int tempXORq31 = garble_next_wire(ctxt);
 	int tempXORq32 = garble_next_wire(ctxt);
 
-	garble_gate_XOR(gc, AOutput, and03Output, tempXORq31);
-	garble_gate_XOR(gc, and13Output, tempXORq31, tempXORq32);
-	garble_gate_XOR(gc, and23Output, tempXORq32, q3Output);
+	garble_gate_XOR(gc, ctxt, AOutput, and03Output, tempXORq31);
+	garble_gate_XOR(gc, ctxt, and13Output, tempXORq31, tempXORq32);
+	garble_gate_XOR(gc, ctxt, and23Output, tempXORq32, q3Output);
 
 	outputs[0] = q0Output;
 	outputs[1] = q1Output;
@@ -510,46 +509,46 @@ AFFINE(garble_circuit *gc, garble_context *ctxt, const int *inputs,
 	int a5barOutput = garble_next_wire(ctxt);
 	int a6barOutput = garble_next_wire(ctxt);
 
-	garble_gate_XOR(gc, inputs[0], inputs[1], AOutput);
-	garble_gate_XOR(gc, inputs[2], inputs[3], BOutput);
-	garble_gate_XOR(gc, inputs[4], inputs[5], COutput);
-	garble_gate_XOR(gc, inputs[6], inputs[7], DOutput);
-	garble_gate_NOT(gc, inputs[0], a0barOutput);
-	garble_gate_NOT(gc, inputs[1], a1barOutput);
-	garble_gate_NOT(gc, inputs[5], a5barOutput);
-	garble_gate_NOT(gc, inputs[6], a6barOutput);
+	garble_gate_XOR(gc, ctxt, inputs[0], inputs[1], AOutput);
+	garble_gate_XOR(gc, ctxt, inputs[2], inputs[3], BOutput);
+	garble_gate_XOR(gc, ctxt, inputs[4], inputs[5], COutput);
+	garble_gate_XOR(gc, ctxt, inputs[6], inputs[7], DOutput);
+	garble_gate_NOT(gc, ctxt, inputs[0], a0barOutput);
+	garble_gate_NOT(gc, ctxt, inputs[1], a1barOutput);
+	garble_gate_NOT(gc, ctxt, inputs[5], a5barOutput);
+	garble_gate_NOT(gc, ctxt, inputs[6], a6barOutput);
 
 	int tempWireq0 = garble_next_wire(ctxt);
-	garble_gate_XOR(gc, a0barOutput, COutput, tempWireq0);
-	garble_gate_XOR(gc, tempWireq0, DOutput, q0Output);
+	garble_gate_XOR(gc, ctxt, a0barOutput, COutput, tempWireq0);
+	garble_gate_XOR(gc, ctxt, tempWireq0, DOutput, q0Output);
 
 	int tempWireq1 = garble_next_wire(ctxt);
-	garble_gate_XOR(gc, a5barOutput, AOutput, tempWireq1);
-	garble_gate_XOR(gc, tempWireq1, DOutput, q1Output);
+	garble_gate_XOR(gc, ctxt, a5barOutput, AOutput, tempWireq1);
+	garble_gate_XOR(gc, ctxt, tempWireq1, DOutput, q1Output);
 
 	int tempWireq2 = garble_next_wire(ctxt);
-	garble_gate_XOR(gc, inputs[2], AOutput, tempWireq2);
-	garble_gate_XOR(gc, tempWireq2, DOutput, q2Output);
+	garble_gate_XOR(gc, ctxt, inputs[2], AOutput, tempWireq2);
+	garble_gate_XOR(gc, ctxt, tempWireq2, DOutput, q2Output);
 
 	int tempWireq3 = garble_next_wire(ctxt);
-	garble_gate_XOR(gc, inputs[7], AOutput, tempWireq3);
-	garble_gate_XOR(gc, tempWireq3, BOutput, q3Output);
+	garble_gate_XOR(gc, ctxt, inputs[7], AOutput, tempWireq3);
+	garble_gate_XOR(gc, ctxt, tempWireq3, BOutput, q3Output);
 
 	int tempWireq4 = garble_next_wire(ctxt);
-	garble_gate_XOR(gc, inputs[4], AOutput, tempWireq4);
-	garble_gate_XOR(gc, tempWireq4, BOutput, q4Output);
+	garble_gate_XOR(gc, ctxt, inputs[4], AOutput, tempWireq4);
+	garble_gate_XOR(gc, ctxt, tempWireq4, BOutput, q4Output);
 
 	int tempWireq5 = garble_next_wire(ctxt);
-	garble_gate_XOR(gc, a1barOutput, BOutput, tempWireq5);
-	garble_gate_XOR(gc, tempWireq5, COutput, q5Output);
+	garble_gate_XOR(gc, ctxt, a1barOutput, BOutput, tempWireq5);
+	garble_gate_XOR(gc, ctxt, tempWireq5, COutput, q5Output);
 
 	int tempWireq6 = garble_next_wire(ctxt);
-	garble_gate_XOR(gc, a6barOutput, BOutput, tempWireq6);
-	garble_gate_XOR(gc, tempWireq6, COutput, q6Output);
+	garble_gate_XOR(gc, ctxt, a6barOutput, BOutput, tempWireq6);
+	garble_gate_XOR(gc, ctxt, tempWireq6, COutput, q6Output);
 
 	int tempWireq7 = garble_next_wire(ctxt);
-	garble_gate_XOR(gc, inputs[3], COutput, tempWireq7);
-	garble_gate_XOR(gc, tempWireq7, DOutput, q7Output);
+	garble_gate_XOR(gc, ctxt, inputs[3], COutput, tempWireq7);
+	garble_gate_XOR(gc, ctxt, tempWireq7, DOutput, q7Output);
 
 	outputs[0] = q0Output;
 	outputs[1] = q1Output;

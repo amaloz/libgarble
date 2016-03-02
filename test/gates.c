@@ -1,5 +1,5 @@
 
-#include "garble.h"
+#include <garble.h>
 #include "circuits.h"
 #include "gates.h"
 #include "utils.h"
@@ -12,26 +12,24 @@
 
 static void
 build_circuit(garble_circuit *gc, int n, int nlayers, garble_type_e type,
-              void (*f)(garble_circuit *, int, int, int))
+              void (*f)(garble_circuit *, garble_context *, int, int, int))
 {
     garble_context ctxt;
     int *inputs = calloc(n, sizeof(int));
     int *outputs = calloc(n, sizeof(int));
-    int q = nlayers * n / 2;
-    int r = n + q;
 
     countToN(inputs, n);
-    garble_new(gc, n, n, q, r, type);
+    garble_new(gc, n, n, type);
     garble_start_building(gc, &ctxt);
     for (int layer = 0; layer < nlayers; ++layer) {
         for (int i = 0; i < n; i += 2) {
             int wire = garble_next_wire(&ctxt);
-            f(gc, inputs[i], inputs[i + 1], wire);
+            f(gc, &ctxt, inputs[i], inputs[i + 1], wire);
             outputs[i] = outputs[i + 1] = wire;
         }
         memcpy(inputs, outputs, n * sizeof(int));
     }
-    garble_finish_building(gc, outputs);
+    garble_finish_building(gc, &ctxt, outputs);
 
     free(inputs);
     free(outputs);
@@ -39,7 +37,7 @@ build_circuit(garble_circuit *gc, int n, int nlayers, garble_type_e type,
 
 static void
 test_circuit(int n, int nlayers, garble_type_e type,
-             void (*f)(garble_circuit *, int, int, int))
+             void (*f)(garble_circuit *, garble_context *, int, int, int))
 {
     garble_circuit gc;
     block *inputLabels = garble_allocate_blocks(2 * n);
@@ -83,7 +81,7 @@ test_circuit(int n, int nlayers, garble_type_e type,
 
 static void
 measure_circuit(int n, int nlayers, int ntimes, garble_type_e type,
-                void (*f)(garble_circuit *, int, int, int))
+                void (*f)(garble_circuit *, garble_context *, int, int, int))
 {
     garble_circuit gc;
     block *inputLabels = garble_allocate_blocks(2 * n);
@@ -108,11 +106,11 @@ measure_circuit(int n, int nlayers, int ntimes, garble_type_e type,
 
     for (int j = 0; j < ntimes; j++) {
         for (int i = 0; i < ntimes; i++) {
-            start = current_time();
+            start = current_time_cycles();
             {
                 (void) garble_garble(&gc, inputLabels, outputLabels);
             }
-            end = current_time();
+            end = current_time_cycles();
                 
             timeGarble[i] = end - start;
 
@@ -120,12 +118,12 @@ measure_circuit(int n, int nlayers, int ntimes, garble_type_e type,
                 inputs[k] = rand() % 2;
             }
                 
-            start = current_time();
+            start = current_time_cycles();
             {
                 garble_extract_labels(extractedLabels, inputLabels, inputs, gc.n);
                 garble_eval(&gc, extractedLabels, outputMap);
             }
-            end = current_time();
+            end = current_time_cycles();
             timeEval[i] = end - start;
         }
         timeGarbleMedians[j] = ((double) median(timeGarble, ntimes)) / gc.q;
