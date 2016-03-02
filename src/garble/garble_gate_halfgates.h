@@ -8,15 +8,53 @@
 #include <string.h>
 
 inline void
-garble_gate_halfgates(garble_gate_type_e type, block A0, block A1, block B0,
-                      block B1, block *out0, block *out1, block delta,
-                      block *table, uint64_t idx, const AES_KEY *key)
+garble_gate_eval_halfgates(garble_gate_type_e type, block A, block B, block *out,
+                           const block *table, uint64_t idx, const AES_KEY *key)
+{
+    if (type == GARBLE_GATE_XOR) {
+        *out = garble_xor(A, B);
+    } else {
+        block HA, HB, W;
+        int sa, sb;
+        block tweak1, tweak2;
+
+        sa = garble_lsb(A);
+        sb = garble_lsb(B);
+
+        tweak1 = garble_make_block(2 * idx, (long) 0);
+        tweak2 = garble_make_block(2 * idx + 1, (long) 0);
+
+        {
+            block keys[2];
+            block masks[2];
+
+            keys[0] = garble_xor(garble_double(A), tweak1);
+            keys[1] = garble_xor(garble_double(B), tweak2);
+            masks[0] = keys[0];
+            masks[1] = keys[1];
+            AES_ecb_encrypt_blks(keys, 2, key);
+            HA = garble_xor(keys[0], masks[0]);
+            HB = garble_xor(keys[1], masks[1]);
+        }
+
+        W = garble_xor(HA, HB);
+        if (sa)
+            W = garble_xor(W, table[0]);
+        if (sb) {
+            W = garble_xor(W, table[1]);
+            W = garble_xor(W, A);
+        }
+        *out = W;
+    }
+}
+
+inline void
+garble_gate_garble_halfgates(garble_gate_type_e type, block A0, block A1, block B0,
+                             block B1, block *out0, block *out1, block delta,
+                             block *table, uint64_t idx, const AES_KEY *key)
 {
     if (type == GARBLE_GATE_XOR) {
         *out0 = garble_xor(A0, B0);
-        *out1 = garble_xor(*out0, delta);
-    } else if (type == GARBLE_GATE_NOT) {
-        *out0 = garble_xor(A0, delta);
         *out1 = garble_xor(*out0, delta);
     } else {
         long pa = garble_lsb(A0);
@@ -68,7 +106,7 @@ garble_gate_halfgates(garble_gate_type_e type, block A0, block A1, block B0,
             W0 = garble_xor(W0, pb ? HB1 : HB0);
             goto finish;
         default:
-            assert(0);
+            assert(false && "unknown gate type");
             abort();
         }
     finish:

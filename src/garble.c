@@ -19,6 +19,7 @@
 #include "garble.h"
 #include "garble/aes.h"
 #include "garble/garble_gate_halfgates.h"
+#include "garble/garble_gate_privacy_free.h"
 #include "garble/garble_gate_standard.h"
 
 #include <assert.h>
@@ -27,71 +28,20 @@
 #include <string.h>
 #include <time.h>
 
-static inline void
-hash2(block *A, block *B, const block tweak, const AES_KEY *key)
-{
-    block masks[2], keys[2];
-
-    keys[0] = garble_xor(garble_double(*A), tweak);
-    keys[1] = garble_xor(garble_double(*B), tweak);
-    memcpy(masks, keys, sizeof keys);
-    AES_ecb_encrypt_blks(keys, 2, key);
-    *A = garble_xor(keys[0], masks[0]);
-    *B = garble_xor(keys[1], masks[1]);
-}
-
 static void
 _garble_privacy_free(garble_circuit *gc, const AES_KEY *key, block delta)
 {
     for (uint64_t i = 0; i < gc->q; ++i) {
-        garble_gate *g;
-        block A0, A1, B0, B1;
+        garble_gate *g = &gc->gates[i];
 
-        g = &gc->gates[i];
-        A0 = gc->wires[g->input0].label0;
-        A1 = gc->wires[g->input0].label1;
-		B0 = gc->wires[g->input1].label0;
-        B1 = gc->wires[g->input1].label1;
-
-#ifdef DEBUG
-        if ((*((char *) &A0) & 0x01) == 1
-            || (*((char *) &B0) & 0x01) == 1
-            || (*((char *) &A1) & 0x01) == 0
-            || (*((char *) &B1) & 0x01) == 0) {
-            assert(false && "invalid lsb in block");
-        }
-#endif
-
-        if (g->type == GARBLE_GATE_XOR) {
-            gc->wires[g->output].label0 = garble_xor(A0, B0);
-            gc->wires[g->output].label1 =
-                garble_xor(gc->wires[g->output].label0, delta);
-        } else if (g->type == GARBLE_GATE_NOT) {
-            assert(0);
-        } else {
-            block tweak, tmp;
-
-            tweak = garble_make_block(2 * i, (long) 0);
-            hash2(&A0, &A1, tweak, key);
-            *((char *) &A0) &= 0xfe;
-            *((char *) &A1) |= 0x01;
-            tmp = garble_xor(A0, A1);
-            switch (g->type) {
-            case GARBLE_GATE_AND:
-                gc->table[i] = garble_xor(tmp, B0);
-                gc->wires[g->output].label0 = A0;
-                gc->wires[g->output].label1 = garble_xor(A0, delta);
-                break;
-            case GARBLE_GATE_OR:
-                gc->table[i] = garble_xor(tmp, B1);
-                gc->wires[g->output].label1 = A1;
-                gc->wires[g->output].label0 = garble_xor(A1, delta);
-                break;
-            default:
-                assert(false && "unknown gate type");
-                abort();
-            }
-        }
+        garble_gate_garble_privacy_free(g->type,
+                                        gc->wires[g->input0].label0,
+                                        gc->wires[g->input0].label1,
+                                        gc->wires[g->input1].label0,
+                                        gc->wires[g->input1].label1,
+                                        &gc->wires[g->output].label0,
+                                        &gc->wires[g->output].label1,
+                                        delta, &gc->table[i], i, key);
     }
 }
 
@@ -102,14 +52,14 @@ _garble_halfgates(garble_circuit *gc, const AES_KEY *key, block delta)
 	for (uint64_t i = 0; i < gc->q; i++) {
         garble_gate *g = &gc->gates[i];
 
-        garble_gate_halfgates(g->type,
-                              gc->wires[g->input0].label0,
-                              gc->wires[g->input0].label1,
-                              gc->wires[g->input1].label0,
-                              gc->wires[g->input1].label1,
-                              &gc->wires[g->output].label0,
-                              &gc->wires[g->output].label1,
-                              delta, &gc->table[2 * i], i, key);
+        garble_gate_garble_halfgates(g->type,
+                                     gc->wires[g->input0].label0,
+                                     gc->wires[g->input0].label1,
+                                     gc->wires[g->input1].label0,
+                                     gc->wires[g->input1].label1,
+                                     &gc->wires[g->output].label0,
+                                     &gc->wires[g->output].label1,
+                                     delta, &gc->table[2 * i], i, key);
 	}
 }
 
@@ -119,14 +69,14 @@ _garble_standard(garble_circuit *gc, const AES_KEY *key, block delta)
     for (uint64_t i = 0; i < gc->q; i++) {
         garble_gate *g = &gc->gates[i];
 
-        garble_gate_standard(g->type,
-                             gc->wires[g->input0].label0,
-                             gc->wires[g->input0].label1,
-                             gc->wires[g->input1].label0,
-                             gc->wires[g->input1].label1,
-                             &gc->wires[g->output].label0,
-                             &gc->wires[g->output].label1,
-                             delta, &gc->table[3 * i], i, key);
+        garble_gate_garble_standard(g->type,
+                                    gc->wires[g->input0].label0,
+                                    gc->wires[g->input0].label1,
+                                    gc->wires[g->input1].label0,
+                                    gc->wires[g->input1].label1,
+                                    &gc->wires[g->output].label0,
+                                    &gc->wires[g->output].label1,
+                                    delta, &gc->table[3 * i], i, key);
     }
 }
 

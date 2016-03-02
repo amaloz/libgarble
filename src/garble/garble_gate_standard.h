@@ -8,9 +8,35 @@
 #include <string.h>
 
 inline void
-garble_gate_standard(garble_gate_type_e type, block A0, block A1, block B0,
-                     block B1, block *out0, block *out1, block delta,
-                     block *table, uint64_t idx, const AES_KEY *key)
+garble_gate_eval_standard(garble_gate_type_e type, block A, block B, block *out,
+                           const block *table, uint64_t idx, const AES_KEY *key)
+{
+    if (type == GARBLE_GATE_XOR) {
+        *out = garble_xor(A, B);
+    } else {
+        block HA, HB, tmp, tweak, val;
+        int a, b;
+
+        a = garble_lsb(A);
+        b = garble_lsb(B);
+        
+        HA = garble_double(A);
+        HB = garble_double(garble_double(B));
+
+        tweak = garble_make_block(idx, (long) 0);
+        val = garble_xor(garble_xor(HA, HB), tweak);
+        tmp = a + b ? garble_xor(table[2*a+b-1], val) : val;
+        AES_ecb_encrypt_blks(&val, 1, key);
+
+        *out = garble_xor(val, tmp);
+    }
+}
+
+    
+inline void
+garble_gate_garble_standard(garble_gate_type_e type, block A0, block A1, block B0,
+                            block B1, block *out0, block *out1, block delta,
+                            block *table, uint64_t idx, const AES_KEY *key)
 {
     block tweak, blocks[4], keys[4], mask[4];
     block newToken, newToken2;
@@ -98,7 +124,7 @@ garble_gate_standard(garble_gate_type_e type, block A0, block A1, block B0,
         blocks[3] = *label0;
         break;
     default:
-        assert(0);
+        assert(false && "unknown gate type");
         abort();
     }
 

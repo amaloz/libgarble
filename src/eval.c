@@ -17,7 +17,9 @@
 */
 
 #include "garble.h"
-#include "garble/aes.h"
+#include "garble/garble_gate_halfgates.h"
+#include "garble/garble_gate_privacy_free.h"
+#include "garble/garble_gate_standard.h"
 
 #include <assert.h>
 #include <string.h>
@@ -34,115 +36,33 @@ hash1(block *A, block tweak, const AES_KEY *K)
     *A = garble_xor(key, mask);
 }
 
-static inline void
-hash2(block *A, block *B, block tweak1, block tweak2, const AES_KEY *key)
-{
-    block keys[2];
-    block masks[2];
-
-    keys[0] = garble_xor(garble_double(*A), tweak1);
-    keys[1] = garble_xor(garble_double(*B), tweak2);
-    masks[0] = keys[0];
-    masks[1] = keys[1];
-    AES_ecb_encrypt_blks(keys, 2, key);
-    *A = garble_xor(keys[0], masks[0]);
-    *B = garble_xor(keys[1], masks[1]);
-}
-
 static void
 _eval_privacy_free(const garble_circuit *gc, block *labels, const AES_KEY *key)
 {
 	for (uint64_t i = 0; i < gc->q; i++) {
 		garble_gate *g = &gc->gates[i];
-		if (g->type == GARBLE_GATE_XOR) {
-			labels[g->output] = garble_xor(labels[g->input0], labels[g->input1]);
-		} else if (g->type == GARBLE_GATE_NOT) {
-            assert(0);
-        } else {
-            block A, B, W;
-            bool sa;
-            block tweak;
 
-            A = labels[g->input0];
-            B = labels[g->input1];
-
-            sa = garble_lsb(A);
-
-            tweak = garble_make_block(2 * i, (long) 0);
-
-            hash1(&A, tweak, key);
-            switch (g->type) {
-            case GARBLE_GATE_AND:
-                if (sa) {
-                    *((char *) &A) |= 0x01;
-                    W = garble_xor(A, gc->table[i]);
-                    W = garble_xor(W, B);
-                } else {
-                    *((char *) &A) &= 0xfe;
-                    W = A;
-                }
-                break;
-            case GARBLE_GATE_OR:
-                if (sa) {
-                    *((char *) &A) |= 0x01;
-                    W = A;
-                } else {
-                    *((char *) &A) &= 0xfe;
-                    W = garble_xor(A, gc->table[i]);
-                    W = garble_xor(W, B);
-                }
-                break;
-            default:
-                assert(false && "unknown gate type");
-                abort();
-            }
-            labels[g->output] = W;
-        }
+        garble_gate_eval_privacy_free(g->type,
+                                      labels[g->input0],
+                                      labels[g->input1],
+                                      &labels[g->output],
+                                      &gc->table[i],
+                                      i, key);
 	}
 }
 
 static void
-_eval_halfgates(const garble_circuit *gc, block *labels, const AES_KEY *K)
+_eval_halfgates(const garble_circuit *gc, block *labels, const AES_KEY *key)
 {
 	for (uint64_t i = 0; i < gc->q; i++) {
 		garble_gate *g = &gc->gates[i];
-		if (g->type == GARBLE_GATE_XOR) {
-			labels[g->output] =
-                garble_xor(labels[g->input0], labels[g->input1]);
-		} else if (g->type == GARBLE_GATE_NOT) {
-            block A, tweak;
-            unsigned short pa;
 
-            A = labels[g->input0];
-            tweak = garble_make_block(2 * i, (long) 0);
-            pa = garble_lsb(A);
-            hash1(&A, tweak, K);
-            labels[g->output] = garble_xor(A, gc->table[2 * i + pa]);
-        } else {
-            block A, B, W;
-            int sa, sb;
-            block tweak1, tweak2;
-
-            A = labels[g->input0];
-            B = labels[g->input1];
-
-            sa = garble_lsb(A);
-            sb = garble_lsb(B);
-
-            tweak1 = garble_make_block(2 * i, (long) 0);
-            tweak2 = garble_make_block(2 * i + 1, (long) 0);
-
-            hash2(&A, &B, tweak1, tweak2, K);
-
-            W = garble_xor(A, B);
-            if (sa)
-                W = garble_xor(W, gc->table[2 * i]);
-            if (sb) {
-                W = garble_xor(W, gc->table[2 * i + 1]);
-                W = garble_xor(W, labels[g->input0]);
-            }
-            labels[g->output] = W;
-        }
+        garble_gate_eval_halfgates(g->type,
+                                   labels[g->input0],
+                                   labels[g->input1],
+                                   &labels[g->output],
+                                   &gc->table[2 * i],
+                                   i, key);
 	}
 }
 
@@ -151,25 +71,13 @@ _eval_standard(const garble_circuit *gc, block *labels, AES_KEY *key)
 {
 	for (uint64_t i = 0; i < gc->q; i++) {
 		garble_gate *g = &gc->gates[i];
-		if (g->type == GARBLE_GATE_XOR) {
-			labels[g->output] = garble_xor(labels[g->input0], labels[g->input1]);
-		} else {
-            block A, B, tmp, tweak, val;
-            int a, b;
 
-            A = garble_double(labels[g->input0]);
-            B = garble_double(garble_double(labels[g->input1]));
-
-            a = garble_lsb(labels[g->input0]);
-            b = garble_lsb(labels[g->input1]);
-
-            tweak = garble_make_block(i, (long) 0);
-            val = garble_xor(garble_xor(A, B), tweak);
-            tmp = a + b ? garble_xor(gc->table[3 * i + 2*a+b-1], val) : val;
-            AES_ecb_encrypt_blks(&val, 1, key);
-
-            labels[g->output] = garble_xor(val, tmp);
-        }
+        garble_gate_eval_standard(g->type,
+                                  labels[g->input0],
+                                  labels[g->input1],
+                                  &labels[g->output],
+                                  &gc->table[3 * i],
+                                  i, key);
 	}
 }
 

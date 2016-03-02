@@ -14,7 +14,6 @@ libgarble_la_SOURCES =	\
 	eval.c	\
 	extend_printf.c	\
 	garble.c	\
-	garble.h	\
 	gc.c	\
 	scd.c
 
@@ -26,4 +25,5 @@ garble_HEADERS =	\
 	garble/aes.h	\
 	garble/block.h	\
 	garble/garble_gate_halfgates.h	\
+	garble/garble_gate_privacy_free.h	\
 	garble/garble_gate_standard.h
