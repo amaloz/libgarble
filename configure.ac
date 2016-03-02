@@ -37,7 +37,8 @@ AC_ARG_ENABLE(debug,
 
 CFLAGS="$CFLAGS -Wall -Wformat -Wformat-security -Wextra -Wunused \
 -Wshadow -Wmissing-prototypes -Wfloat-equal -Wpointer-arith -Wcast-align \
--Wstrict-prototypes -Wredundant-decls -Wendif-labels -Wcast-qual -march=native"
+-Wstrict-prototypes -Wredundant-decls -Wendif-labels -Wcast-qual -march=native \
+-std=gnu11 -Wpedantic"
 if test "$with_debug" == "y"; then
    CFLAGS="$CFLAGS -g3 -O0"
 else
