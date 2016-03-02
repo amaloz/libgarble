@@ -9,10 +9,12 @@ AM_LDFLAGS = \
 
 check_PROGRAMS = \
 	aes	\
-	gates
+	gates \
+	circuit
 
 
 TESTS = $(check_PROGRAMS)
 
 aes_SOURCES = aes.c utils.c
 gates_SOURCES = gates.c utils.c
+circuit_SOURCES = circuit.c utils.c
