@@ -8,14 +8,14 @@
 #include <string.h>
 
 inline void
-garble_gate_halfgates(const garble_gate *g, block A0, block A1, block B0,
+garble_gate_halfgates(garble_gate_type_e type, block A0, block A1, block B0,
                       block B1, block *out0, block *out1, block delta,
                       block *table, uint64_t idx, const AES_KEY *key)
 {
-    if (g->type == GARBLE_GATE_XOR) {
+    if (type == GARBLE_GATE_XOR) {
         *out0 = garble_xor(A0, B0);
         *out1 = garble_xor(*out0, delta);
-    } else if (g->type == GARBLE_GATE_NOT) {
+    } else if (type == GARBLE_GATE_NOT) {
         *out0 = garble_xor(A0, delta);
         *out1 = garble_xor(*out0, delta);
     } else {
@@ -42,7 +42,7 @@ garble_gate_halfgates(const garble_gate *g, block A0, block A1, block B0,
             HB0 = garble_xor(keys[2], masks[2]);
             HB1 = garble_xor(keys[3], masks[3]);
         }
-        switch (g->type) {
+        switch (type) {
         case GARBLE_GATE_AND:
             table[0] = garble_xor(HA0, HA1);
             if (pb)

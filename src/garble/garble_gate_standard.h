@@ -8,7 +8,7 @@
 #include <string.h>
 
 inline void
-garble_gate_standard(const garble_gate *g, block A0, block A1, block B0,
+garble_gate_standard(garble_gate_type_e type, block A0, block A1, block B0,
                      block B1, block *out0, block *out1, block delta,
                      block *table, uint64_t idx, const AES_KEY *key)
 {
@@ -27,7 +27,7 @@ garble_gate_standard(const garble_gate *g, block A0, block A1, block B0,
     }
 #endif
 
-    if (g->type == GARBLE_GATE_XOR) {
+    if (type == GARBLE_GATE_XOR) {
         *out0 = garble_xor(A0, B0);
         *out1 = garble_xor(*out0, delta);
         return;
@@ -57,7 +57,7 @@ garble_gate_standard(const garble_gate *g, block A0, block A1, block B0,
     label0 = out0;
     label1 = out1;
 
-    switch (g->type) {
+    switch (type) {
     case GARBLE_GATE_AND:
         if (lsb1 & lsb0) {
             *label0 = newToken2;

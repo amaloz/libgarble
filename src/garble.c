@@ -102,7 +102,7 @@ _garble_halfgates(garble_circuit *gc, const AES_KEY *key, block delta)
 	for (uint64_t i = 0; i < gc->q; i++) {
         garble_gate *g = &gc->gates[i];
 
-        garble_gate_halfgates(g,
+        garble_gate_halfgates(g->type,
                               gc->wires[g->input0].label0,
                               gc->wires[g->input0].label1,
                               gc->wires[g->input1].label0,
@@ -119,7 +119,7 @@ _garble_standard(garble_circuit *gc, const AES_KEY *key, block delta)
     for (uint64_t i = 0; i < gc->q; i++) {
         garble_gate *g = &gc->gates[i];
 
-        garble_gate_standard(g,
+        garble_gate_standard(g->type,
                              gc->wires[g->input0].label0,
                              gc->wires[g->input0].label1,
                              gc->wires[g->input1].label0,
