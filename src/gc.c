@@ -39,13 +39,16 @@ garble_delete(garble_circuit *gc)
 {
     if (gc == NULL)
         return;
-	free(gc->gates);
+    if (gc->gates)
+        free(gc->gates);
     if (gc->table)
         free(gc->table);
     if (gc->wires)
         free(gc->wires);
-    free(gc->fixed_wires);
-    free(gc->outputs);
+    if (gc->fixed_wires)
+        free(gc->fixed_wires);
+    if (gc->outputs)
+        free(gc->outputs);
 }
 
 void
@@ -125,7 +128,7 @@ garble_from_buffer(garble_circuit *gc, const char *buf, bool wires)
     p += cpy_to_buf(&gc->type, buf + p, sizeof gc->type);
 
     if ((gc->gates = malloc(sizeof(garble_gate) * gc->q)) == NULL)
-        return -1;
+        return GARBLE_ERR;
     p += cpy_to_buf(gc->gates, buf + p, sizeof(garble_gate) * gc->q);
 
     gc->table = malloc(garble_table_size(gc) * gc->q);
@@ -151,7 +154,7 @@ garble_from_buffer(garble_circuit *gc, const char *buf, bool wires)
 
     p += cpy_to_buf(&gc->fixed_label, buf + p, sizeof(block));
     p += cpy_to_buf(&gc->global_key, buf + p, sizeof(block));
-    return 0;                   /* TODO: check mallocs */
+    return GARBLE_OK;                   /* TODO: check mallocs */
 }
 
 int
@@ -161,11 +164,11 @@ garble_save(const garble_circuit *gc, FILE *f, bool wires)
     size_t res, size = garble_size(gc, wires);
 
     if ((buf = malloc(size)) == NULL)
-        return -1;
+        return GARBLE_ERR;
     garble_to_buffer(gc, buf, wires);
     res = fwrite(buf, sizeof(char), size, f);
     free(buf);
-    return res == size ? 0 : -1;
+    return res == size ? GARBLE_OK : GARBLE_ERR;
 }
 
 int
@@ -181,7 +184,7 @@ garble_load(garble_circuit *gc, FILE *f, bool wires)
     p += fread(&gc->type, sizeof gc->type, 1, f);
 
     if ((gc->gates = malloc(sizeof(garble_gate) * gc->q)) == NULL)
-        return -1;
+        return GARBLE_ERR;
     p += fread(gc->gates, sizeof(garble_gate), gc->q, f);
 
     gc->table = malloc(garble_table_size(gc) * gc->q);
@@ -207,5 +210,5 @@ garble_load(garble_circuit *gc, FILE *f, bool wires)
 
     p += fread(&gc->fixed_label, sizeof(block), 1, f);
     p += fread(&gc->global_key, sizeof(block), 1, f);
-    return 0;                   /* TODO: check mallocs */
+    return GARBLE_OK;                   /* TODO: check mallocs */
 }
