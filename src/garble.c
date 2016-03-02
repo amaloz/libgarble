@@ -17,7 +17,6 @@
 */
 
 #include "garble.h"
-#include "garble/aes.h"
 #include "garble/garble_gate_halfgates.h"
 #include "garble/garble_gate_privacy_free.h"
 #include "garble/garble_gate_standard.h"

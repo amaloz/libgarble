@@ -86,6 +86,7 @@ garble_eval(const garble_circuit *gc, const block *inputs, block *outputs)
 {
     AES_KEY key;
     block *labels;
+    block fixed_label;
 
     if (gc == NULL)
         return GARBLE_ERR;
@@ -97,20 +98,20 @@ garble_eval(const garble_circuit *gc, const block *inputs, block *outputs)
     memcpy(labels, inputs, gc->n * sizeof inputs[0]);
 
     /* Set fixed wire labels */
+    fixed_label = gc->fixed_label;
     for (uint64_t i = 0; i < gc->n_fixed_wires; ++i) {
         switch (gc->fixed_wires[i].type) {
         case GARBLE_FIXED_WIRE_ZERO:
-            *((char *) &gc->fixed_label) &= 0xfe;
-            labels[gc->fixed_wires[i].idx] = gc->fixed_label;
+            *((char *) &fixed_label) &= 0xfe;
+            labels[gc->fixed_wires[i].idx] = fixed_label;
             break;
         case GARBLE_FIXED_WIRE_ONE:
-            *((char *) &gc->fixed_label) |= 0x01;
-            labels[gc->fixed_wires[i].idx] = gc->fixed_label;
+            *((char *) &fixed_label) |= 0x01;
+            labels[gc->fixed_wires[i].idx] = fixed_label;
             break;
         }
     }
 
-    /* Process gates */
     switch (gc->type) {
     case GARBLE_TYPE_STANDARD:
         _eval_standard(gc, labels, &key);
