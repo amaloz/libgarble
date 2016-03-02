@@ -18,8 +18,8 @@
 
 #include "garble.h"
 #include "garble/aes.h"
-#include "garble_gate_halfgates.h"
-#include "garble_gate_standard.h"
+#include "garble/garble_gate_halfgates.h"
+#include "garble/garble_gate_standard.h"
 
 #include <assert.h>
 #include <malloc.h>

@@ -24,4 +24,6 @@ include_HEADERS = \
 garbledir = $(includedir)/garble
 garble_HEADERS =	\
 	garble/aes.h	\
-	garble/block.h
+	garble/block.h	\
+	garble/garble_gate_halfgates.h	\
+	garble/garble_gate_standard.h
