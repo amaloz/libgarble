@@ -41,3 +41,7 @@ autom4te.cache
 build
 config.h.in*
 libtool
+Makefile
+aclocal.m4
+config.h
+
