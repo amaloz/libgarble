@@ -33,7 +33,7 @@
 
 #define AES_CIRCUIT_FILE_NAME "./aesCircuit"
 
-static const int roundLimit = 1;
+static const int roundLimit = 10;
 static const int n = 128 * (10 + 1);
 static const int m = 128;
 
@@ -63,20 +63,19 @@ build(garble_circuit *gc, garble_type_e type)
 			SubBytes(gc, &ctxt, addKeyOutputs + 8 * i, subBytesOutputs + 8 * i);
 		}
 
-		/* ShiftRows(subBytesOutputs, shiftRowsOutputs); */
+		ShiftRows(subBytesOutputs, shiftRowsOutputs);
 
-		/* for (int i = 0; i < 4; i++) { */
-		/* 	if (round != roundLimit - 1) */
-		/* 		MixColumns(gc, &ctxt, shiftRowsOutputs + i * 32, */
-        /*                    mixColumnOutputs + 32 * i); */
-		/* } */
-		/* for (int i = 0; i < 128; i++) { */
-		/* 	addKeyInputs[i] = mixColumnOutputs[i]; */
-		/* 	addKeyInputs[i + 128] = (round + 2) * 128 + i; */
-		/* } */
+		for (int i = 0; i < 4; i++) {
+			if (round != roundLimit - 1)
+				MixColumns(gc, &ctxt, shiftRowsOutputs + i * 32,
+                           mixColumnOutputs + 32 * i);
+		}
+		for (int i = 0; i < 128; i++) {
+			addKeyInputs[i] = mixColumnOutputs[i];
+			addKeyInputs[i + 128] = (round + 2) * 128 + i;
+		}
 	}
-    garble_finish_building(gc, subBytesOutputs);
-	/* garble_finish_building(gc, mixColumnOutputs); */
+	garble_finish_building(gc, mixColumnOutputs);
 }
 
 int
@@ -100,6 +99,19 @@ main(int argc, char *argv[])
         type = GARBLE_TYPE_STANDARD;
     }
 
+    printf("Type: ");
+    switch (type) {
+    case GARBLE_TYPE_STANDARD:
+        printf("Standard\n");
+        break;
+    case GARBLE_TYPE_HALFGATES:
+        printf("Half-gates\n");
+        break;
+    case GARBLE_TYPE_PRIVACY_FREE:
+        printf("Privacy free\n");
+        break;
+    }
+
     build(&gc, type);
     /* garble_to_file(&gc, AES_CIRCUIT_FILE_NAME); */
     /* garble_delete(&gc); */
@@ -111,9 +123,7 @@ main(int argc, char *argv[])
     garble_hash(&gc, hash);
 
     {
-        block *extractedLabels = garble_allocate_blocks(n);
         block *computedOutputMap = garble_allocate_blocks(m);
-        bool *inputs = calloc(n, sizeof(bool));
         bool *outputVals = calloc(m, sizeof(bool));
         for (int i = 0; i < n; ++i) {
             inputs[i] = rand() % 2;
@@ -131,9 +141,7 @@ main(int argc, char *argv[])
             assert(garble_check(&gc2, hash) == GARBLE_OK);
             garble_delete(&gc2);
         }
-        free(extractedLabels);
         free(computedOutputMap);
-        free(inputs);
         free(outputVals);
     }
     {
