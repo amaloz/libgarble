@@ -104,7 +104,8 @@ garble_check(garble_circuit *gc, const unsigned char hash[SHA_DIGEST_LENGTH]);
 block
 garble_create_delta(void);
 void
-garble_create_input_labels(block *labels, uint64_t n, block *delta);
+garble_create_input_labels(block *labels, uint64_t n, block *delta,
+                           bool privacyfree);
 
 int
 garble_eval(const garble_circuit *gc, const block *inputs, block *outputs);

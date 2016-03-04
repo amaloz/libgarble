@@ -1,21 +1,3 @@
-/*
- This file is part of JustGarble.
-
-    JustGarble is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    JustGarble is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with JustGarble.  If not, see <http://www.gnu.org/licenses/>.
-
-*/
-
 #include "garble.h"
 #include "garble/garble_gate_halfgates.h"
 #include "garble/garble_gate_privacy_free.h"
@@ -48,7 +30,7 @@ _garble_privacy_free(garble_circuit *gc, const AES_KEY *key, block delta)
 static void
 _garble_halfgates(garble_circuit *gc, const AES_KEY *key, block delta)
 {
-	for (uint64_t i = 0; i < gc->q; i++) {
+    for (uint64_t i = 0; i < gc->q; i++) {
         garble_gate *g = &gc->gates[i];
 
         garble_gate_garble_halfgates(g->type,
@@ -59,7 +41,7 @@ _garble_halfgates(garble_circuit *gc, const AES_KEY *key, block delta)
                                      &gc->wires[g->output].label0,
                                      &gc->wires[g->output].label1,
                                      delta, &gc->table[2 * i], i, key);
-	}
+    }
 }
 
 static void
@@ -191,13 +173,16 @@ garble_create_delta(void)
 }
 
 void
-garble_create_input_labels(block *labels, uint64_t n, block *delta)
+garble_create_input_labels(block *labels, uint64_t n, block *delta,
+                           bool privacyfree)
 {
     block delta_;
 
     delta_ = delta ? *delta : garble_create_delta();
-	for (uint64_t i = 0; i < 2 * n; i += 2) {
+    for (uint64_t i = 0; i < 2 * n; i += 2) {
         labels[i] = garble_random_block();
-		labels[i + 1] = garble_xor(labels[i], delta_);
-	}
+        if (privacyfree)
+            *((char *) &labels[i]) &= 0xfe;
+        labels[i + 1] = garble_xor(labels[i], delta_);
+    }
 }
