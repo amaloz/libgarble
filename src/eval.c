@@ -1,21 +1,3 @@
-/*
- This file is part of JustGarble.
-
-    JustGarble is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    JustGarble is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with JustGarble.  If not, see <http://www.gnu.org/licenses/>.
-
-*/
-
 #include "garble.h"
 #include "garble/garble_gate_halfgates.h"
 #include "garble/garble_gate_privacy_free.h"
@@ -39,8 +21,8 @@ hash1(block *A, block tweak, const AES_KEY *K)
 static void
 _eval_privacy_free(const garble_circuit *gc, block *labels, const AES_KEY *key)
 {
-	for (uint64_t i = 0; i < gc->q; i++) {
-		garble_gate *g = &gc->gates[i];
+    for (uint64_t i = 0; i < gc->q; i++) {
+        garble_gate *g = &gc->gates[i];
 
         garble_gate_eval_privacy_free(g->type,
                                       labels[g->input0],
@@ -48,14 +30,14 @@ _eval_privacy_free(const garble_circuit *gc, block *labels, const AES_KEY *key)
                                       &labels[g->output],
                                       &gc->table[i],
                                       i, key);
-	}
+    }
 }
 
 static void
 _eval_halfgates(const garble_circuit *gc, block *labels, const AES_KEY *key)
 {
-	for (uint64_t i = 0; i < gc->q; i++) {
-		garble_gate *g = &gc->gates[i];
+    for (uint64_t i = 0; i < gc->q; i++) {
+        garble_gate *g = &gc->gates[i];
 
         garble_gate_eval_halfgates(g->type,
                                    labels[g->input0],
@@ -63,14 +45,14 @@ _eval_halfgates(const garble_circuit *gc, block *labels, const AES_KEY *key)
                                    &labels[g->output],
                                    &gc->table[2 * i],
                                    i, key);
-	}
+    }
 }
 
 static void
 _eval_standard(const garble_circuit *gc, block *labels, AES_KEY *key)
 {
-	for (uint64_t i = 0; i < gc->q; i++) {
-		garble_gate *g = &gc->gates[i];
+    for (uint64_t i = 0; i < gc->q; i++) {
+        garble_gate *g = &gc->gates[i];
 
         garble_gate_eval_standard(g->type,
                                   labels[g->input0],
@@ -78,7 +60,7 @@ _eval_standard(const garble_circuit *gc, block *labels, AES_KEY *key)
                                   &labels[g->output],
                                   &gc->table[3 * i],
                                   i, key);
-	}
+    }
 }
 
 int
@@ -91,7 +73,7 @@ garble_eval(const garble_circuit *gc, const block *inputs, block *outputs)
     if (gc == NULL)
         return GARBLE_ERR;
 
-	AES_set_encrypt_key(gc->global_key, &key);
+    AES_set_encrypt_key(gc->global_key, &key);
     labels = garble_allocate_blocks(gc->r);
 
     /* Set input wire labels */
@@ -149,15 +131,15 @@ int
 garble_map_outputs(const block *outputs, const block *map, bool *vals,
                    uint64_t m)
 {
-	for (uint64_t i = 0; i < m; i++) {
+    for (uint64_t i = 0; i < m; i++) {
         if (garble_equal(map[i], outputs[2 * i])) {
-			vals[i] = 0;
+            vals[i] = 0;
         } else if (garble_equal(map[i], outputs[2 * i + 1])) {
-			vals[i] = 1;
-		} else {
+            vals[i] = 1;
+        } else {
             printf("MAP OUTPUTS FAILED %ld\n", i);
             return GARBLE_ERR;
         }
-	}
-	return GARBLE_OK;
+    }
+    return GARBLE_OK;
 }

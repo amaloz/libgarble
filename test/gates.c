@@ -1,4 +1,3 @@
-
 #include <garble.h>
 #include "circuits.h"
 #include "gates.h"

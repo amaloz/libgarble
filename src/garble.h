@@ -1,6 +1,3 @@
-/*
- This file is part of LibGarble, based on JustGarble.
-*/
 #ifndef LIBGARBLE_H
 #define LIBGARBLE_H
 
@@ -31,14 +28,14 @@ typedef enum {
 } garble_gate_type_e;
 
 typedef struct {
-	block label0, label1;
+    block label0, label1;
 } garble_wire;
 
 typedef struct {
     /* the type of gate this is */
     garble_gate_type_e type;
     /* the input/output wires associated with this gate */
-	uint64_t input0, input1, output;
+    uint64_t input0, input1, output;
 } garble_gate;
 
 typedef enum {
@@ -78,7 +75,7 @@ size_t garble_table_size(const garble_circuit *gc)
 }
 
 typedef struct {
-	uint64_t wire_index;
+    uint64_t wire_index;
     uint64_t n_fixed_wires;
     uint64_t n_gates;
 } garble_context;

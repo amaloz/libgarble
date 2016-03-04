@@ -25,11 +25,11 @@ garble_new(garble_circuit *gc, uint64_t n, uint64_t m, garble_type_e type)
 
     gc->type = type;
     gc->n = n;
-	gc->m = m;
+    gc->m = m;
     /* q is incremented in circ/gates.c:_gate */
-	gc->q = 0;
+    gc->q = 0;
     /* r is set in garble_finish_building() */
-	gc->r = 0;
+    gc->r = 0;
     gc->n_fixed_wires = 0;
     return GARBLE_OK;
 }
@@ -64,9 +64,9 @@ garble_finish_building(garble_circuit *gc, garble_context *ctxt,
                        const int *outputs)
 {
     gc->r = ctxt->wire_index + gc->q;
-	for (uint64_t i = 0; i < gc->m; ++i) {
-		gc->outputs[i] = outputs[i];
-	}
+    for (uint64_t i = 0; i < gc->m; ++i) {
+        gc->outputs[i] = outputs[i];
+    }
 }
 
 size_t

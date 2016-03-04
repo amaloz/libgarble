@@ -1,21 +1,3 @@
-/*
- This file is part of JustGarble.
-
-    JustGarble is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    JustGarble is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with JustGarble.  If not, see <http://www.gnu.org/licenses/>.
-
-*/
-
 #include "garble.h"
 #include "garble/block.h"
 #include "circuits.h"
@@ -40,7 +22,7 @@ static const int m = 128;
 static void
 build(garble_circuit *gc, garble_type_e type)
 {
-	garble_context ctxt;
+    garble_context ctxt;
 
     int addKeyInputs[256];
     int addKeyOutputs[128];
@@ -48,38 +30,38 @@ build(garble_circuit *gc, garble_type_e type)
     int shiftRowsOutputs[128];
     int mixColumnOutputs[128];
 
-	garble_new(gc, n, m, type);
-	garble_start_building(gc, &ctxt);
+    garble_new(gc, n, m, type);
+    garble_start_building(gc, &ctxt);
 
-	countToN(addKeyInputs, 256);
+    countToN(addKeyInputs, 256);
 
-	for (int round = 0; round < roundLimit; ++round) {
+    for (int round = 0; round < roundLimit; ++round) {
 
-		AddRoundKey(gc, &ctxt, addKeyInputs, addKeyOutputs);
+        AddRoundKey(gc, &ctxt, addKeyInputs, addKeyOutputs);
 
-		for (int i = 0; i < 16; ++i) {
-			SubBytes(gc, &ctxt, addKeyOutputs + 8 * i, subBytesOutputs + 8 * i);
-		}
+        for (int i = 0; i < 16; ++i) {
+            SubBytes(gc, &ctxt, addKeyOutputs + 8 * i, subBytesOutputs + 8 * i);
+        }
 
-		ShiftRows(subBytesOutputs, shiftRowsOutputs);
+        ShiftRows(subBytesOutputs, shiftRowsOutputs);
 
-		for (int i = 0; i < 4; i++) {
-			if (round != roundLimit - 1)
-				MixColumns(gc, &ctxt, shiftRowsOutputs + i * 32,
+        for (int i = 0; i < 4; i++) {
+            if (round != roundLimit - 1)
+                MixColumns(gc, &ctxt, shiftRowsOutputs + i * 32,
                            mixColumnOutputs + 32 * i);
-		}
-		for (int i = 0; i < 128; i++) {
-			addKeyInputs[i] = mixColumnOutputs[i];
-			addKeyInputs[i + 128] = (round + 2) * 128 + i;
-		}
-	}
-	garble_finish_building(gc, &ctxt, mixColumnOutputs);
+        }
+        for (int i = 0; i < 128; i++) {
+            addKeyInputs[i] = mixColumnOutputs[i];
+            addKeyInputs[i + 128] = (round + 2) * 128 + i;
+        }
+    }
+    garble_finish_building(gc, &ctxt, mixColumnOutputs);
 }
 
 int
 main(int argc, char *argv[])
 {
-	garble_circuit gc;
+    garble_circuit gc;
 
     block *inputLabels = garble_allocate_blocks(2 * n);
     block *extractedLabels = garble_allocate_blocks(n);
@@ -113,7 +95,7 @@ main(int argc, char *argv[])
     build(&gc, type);
     /* garble_to_file(&gc, AES_CIRCUIT_FILE_NAME); */
     /* garble_delete(&gc); */
-	/* garble_from_file(&gc, AES_CIRCUIT_FILE_NAME); */
+    /* garble_from_file(&gc, AES_CIRCUIT_FILE_NAME); */
 
     seed = garble_seed(NULL);
     garble_garble(&gc, NULL, outputMap);
@@ -200,5 +182,5 @@ main(int argc, char *argv[])
     free(extractedLabels);
     free(outputMap);
     free(inputLabels);
-	return 0;
+    return 0;
 }
