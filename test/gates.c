@@ -105,6 +105,8 @@ measure_circuit(int n, int nlayers, int ntimes, garble_type_e type,
     bool *inputs = calloc(gc.n, sizeof(bool));
 
     for (int j = 0; j < ntimes; j++) {
+        printf(".");
+        fflush(stdout);
         for (int i = 0; i < ntimes; i++) {
             start = current_time_cycles();
             {
@@ -129,10 +131,15 @@ measure_circuit(int n, int nlayers, int ntimes, garble_type_e type,
         timeGarbleMedians[j] = ((double) median(timeGarble, ntimes)) / gc.q;
         timeEvalMedians[j] = ((double) median(timeEval, ntimes)) / gc.q;
     }
+    printf("\n");
     garblingTime = doubleMean(timeGarbleMedians, ntimes);
     evalTime = doubleMean(timeEvalMedians, ntimes);
     printf("%lf %lf\n", garblingTime, evalTime);
 
+    free(inputLabels);
+    free(outputLabels);
+    free(computedOutputLabels);
+    free(outputs);
     free(extractedLabels);
     free(outputMap);
     free(inputs);
@@ -141,11 +148,6 @@ measure_circuit(int n, int nlayers, int ntimes, garble_type_e type,
     free(timeGarbleMedians);
     free(timeEvalMedians);
 
-    free(inputLabels);
-    free(outputLabels);
-    free(computedOutputLabels);
-    free(inputs);
-    free(outputs);
 }
 
 int
@@ -184,12 +186,14 @@ main(int argc, char *argv[])
         break;
     }
 
-    fprintf(stderr, "***** Testing AND *****\n");
+    printf("***** Testing AND *****\n");
     test_circuit(ninputs, nlayers, type, garble_gate_AND);
-    fprintf(stderr, "***** Testing OR *****\n");
+    printf("***** Testing OR *****\n");
     test_circuit(ninputs, nlayers, type, garble_gate_OR);
-    fprintf(stderr, "***** Testing XOR *****\n");
+    printf("***** Testing XOR *****\n");
     test_circuit(ninputs, nlayers, type, garble_gate_XOR);
+    printf("***** Measuring AND *****\n");
+    measure_circuit(ninputs, nlayers, ntimes, type, garble_gate_AND);
 
     return 0;
 }
