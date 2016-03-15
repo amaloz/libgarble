@@ -413,15 +413,17 @@ INCCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n,
     }
 }
 
-int SUBCircuit(garble_circuit *gc, garble_context *ctxt,
-        uint64_t n, int *inputs, int *outputs) {
+int
+SUBCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n, int *inputs,
+           int *outputs)
+{
     int tempWires[n / 2];
     int tempWires2[n];
     int split = n / 2;
     NOTCircuit(gc, ctxt, n / 2, inputs + split, tempWires);
     INCCircuit(gc, ctxt, n / 2, tempWires, tempWires2 + split);
     memcpy(tempWires2, inputs, sizeof(int) * split);
-    return ADDCircuit(gc, ctxt, n, tempWires2, outputs);
+    ADDCircuit(gc, ctxt, n, tempWires2, outputs, NULL);
 }
 
 int SHLCircuit(garble_circuit *gc, garble_context *ctxt,
@@ -470,7 +472,7 @@ int MULCircuit(garble_circuit *gc, garble_context *ctxt,
         for (uint64_t j = 2 * n; j < 4 * n; j++) {
             tempAddIn[j] = tempAnd[i][j - 2 * n];
         }
-        ADDCircuit(gc, ctxt, 4 * n, tempAddIn, tempAddOut);
+        ADDCircuit(gc, ctxt, 4 * n, tempAddIn, tempAddOut, NULL);
     }
     for (uint64_t j = 0; j < 2 * n; j++) {
         outputs[j] = tempAddOut[j];
@@ -595,50 +597,65 @@ LESCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n,
     free(finalORInputs);
 }
 
-int EQUCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n,
-        int *inputs, int *outputs) {
-    int tempWires[n / 2];
+/* Check equality of two n/2-bit values */
+void
+EQUCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n, int *inputs,
+           int outputs[1])
+{
+    int tempWire1, tempWire2, outWire;
+    int *tempWires;
+    uint64_t split = n / 2;
+
+    assert(n % 2 == 0 && n >= 2);
+
+    tempWires = calloc(split, sizeof(int));
 
     XORCircuit(gc, ctxt, n, inputs, tempWires);
-    int tempWire1 = tempWires[0];
-    int tempWire2;
-    for (uint64_t i = 1; i < n / 2; i++) {
+    tempWire1 = tempWires[0];
+    for (uint64_t i = 1; i < split; ++i) {
         tempWire2 = garble_next_wire(ctxt);
         garble_gate_OR(gc, ctxt, tempWire1, tempWires[i], tempWire2);
         tempWire1 = tempWire2;
     }
-    int outWire = garble_next_wire(ctxt);
+    outWire = garble_next_wire(ctxt);
 
     garble_gate_NOT(gc, ctxt, tempWire1, outWire);
     outputs[0] = outWire;
-    return 0;
+
+    free(tempWires);
 }
 
-
-int ADDCircuit(garble_circuit *gc, garble_context *ctxt,
-        uint64_t n, int *inputs, int *outputs) {
-    int i;
-    int tempOut[3];
+/* Add two n/2-bit values together */
+void
+ADDCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n, int *inputs,
+           int *outputs, int *carry)
+{
+    int tempIn[3], tempOut[2];
     int split = n / 2;
-    int tempIn[3];
+
+    assert(n % 2 == 0 && n >= 2);
 
     tempIn[0] = inputs[0];
     tempIn[1] = inputs[split];
     ADD22Circuit(gc, ctxt, tempIn, tempOut);
     outputs[0] = tempOut[0];
 
-    for (i = 1; i < split; i++) {
-        tempIn[2] = tempOut[1];
-        tempIn[1] = inputs[split + i];
+    for (int i = 1; i < split; ++i) {
         tempIn[0] = inputs[i];
+        tempIn[1] = inputs[split + i];
+        tempIn[2] = tempOut[1];
         ADD32Circuit(gc, ctxt, tempIn, tempOut);
         outputs[i] = tempOut[0];
     }
-    return 0;
+    if (carry)
+        *carry = tempOut[1];
 }
 
-int ADD32Circuit(garble_circuit *gc,
-                 garble_context *ctxt, int *inputs, int *outputs) {
+/* Full adder: https://en.wikipedia.org/wiki/Adder_%28electronics%29#Full_adder */
+void
+ADD32Circuit(garble_circuit *gc, garble_context *ctxt, int inputs[3],
+             int outputs[2])
+{
     int wire1 = garble_next_wire(ctxt);
     int wire2 = garble_next_wire(ctxt);
     int wire3 = garble_next_wire(ctxt);
@@ -650,21 +667,20 @@ int ADD32Circuit(garble_circuit *gc,
     garble_gate_XOR(gc, ctxt, inputs[2], wire2, wire3);
     garble_gate_AND(gc, ctxt, wire1, wire2, wire4);
     garble_gate_XOR(gc, ctxt, inputs[0], wire4, wire5);
-    outputs[0] = wire3;
-    outputs[1] = wire5;
-    return 0;
+    outputs[0] = wire3;         /* Sum */
+    outputs[1] = wire5;         /* Carry */
 }
 
-int
-ADD22Circuit(garble_circuit *gc, garble_context *ctxt,
-             int *inputs, int *outputs)
+/* Half adder: https://en.wikipedia.org/wiki/Adder_%28electronics%29#Half_adder */
+void
+ADD22Circuit(garble_circuit *gc, garble_context *ctxt, int inputs[2],
+             int outputs[2])
 {
     int wire1 = garble_next_wire(ctxt);
     int wire2 = garble_next_wire(ctxt);
 
     garble_gate_XOR(gc, ctxt, inputs[0], inputs[1], wire1);
     garble_gate_AND(gc, ctxt, inputs[0], inputs[1], wire2);
-    outputs[0] = wire1;
-    outputs[1] = wire2;
-    return 0;
+    outputs[0] = wire1;         /* Sum */
+    outputs[1] = wire2;         /* Carry */
 }

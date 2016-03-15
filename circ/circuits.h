@@ -70,9 +70,6 @@ MULCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n,
            int *inputs, int *outputs);
 
 int
-EQUCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n,
-           int *inputs, int *outputs);
-int
 LEQCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n,
            int *inputs, int *outputs);
 int
@@ -112,17 +109,8 @@ int
 MixColumns(garble_circuit *gc, garble_context *ctxt, const int *inputs,
            int *outputs);
 int
-ADDCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n,
-           int *inputs, int *outputs);
-int
 SUBCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n,
            int *inputs, int *outputs);
-int
-ADD32Circuit(garble_circuit *gc, garble_context *ctxt,
-             int *inputs, int *outputs);
-int
-ADD22Circuit(garble_circuit *gc, garble_context *ctxt,
-             int *inputs, int *outputs);
 int
 MULTGF16(garble_circuit *gc, garble_context *ctxt, int* inputs,
          int* outputs);
@@ -146,6 +134,20 @@ void
 RANDCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n, int outputs[1],
             int q, int qf);
 
+
+void
+EQUCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n, int *inputs,
+           int outputs[1]);
+
+void
+ADDCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n, int *inputs,
+           int *outputs, int *carry);
+void
+ADD32Circuit(garble_circuit *gc, garble_context *ctxt, int inputs[3],
+             int outputs[2]);
+void
+ADD22Circuit(garble_circuit *gc, garble_context *ctxt, int inputs[2],
+             int outputs[2]);
 
 #endif /* CIRCUITS_H_ */
 
