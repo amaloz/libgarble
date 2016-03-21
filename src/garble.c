@@ -16,12 +16,12 @@ _garble_privacy_free(garble_circuit *gc, const AES_KEY *key, block delta)
         garble_gate *g = &gc->gates[i];
 
         garble_gate_garble_privacy_free(g->type,
-                                        gc->wires[g->input0].label0,
-                                        gc->wires[g->input0].label1,
-                                        gc->wires[g->input1].label0,
-                                        gc->wires[g->input1].label1,
-                                        &gc->wires[g->output].label0,
-                                        &gc->wires[g->output].label1,
+                                        gc->wires[2 * g->input0],
+                                        gc->wires[2 * g->input0 + 1],
+                                        gc->wires[2 * g->input1],
+                                        gc->wires[2 * g->input1 + 1],
+                                        &gc->wires[2 * g->output],
+                                        &gc->wires[2 * g->output + 1],
                                         delta, &gc->table[i], i, key);
     }
 }
@@ -34,12 +34,12 @@ _garble_halfgates(garble_circuit *gc, const AES_KEY *key, block delta)
         garble_gate *g = &gc->gates[i];
 
         garble_gate_garble_halfgates(g->type,
-                                     gc->wires[g->input0].label0,
-                                     gc->wires[g->input0].label1,
-                                     gc->wires[g->input1].label0,
-                                     gc->wires[g->input1].label1,
-                                     &gc->wires[g->output].label0,
-                                     &gc->wires[g->output].label1,
+                                     gc->wires[2 * g->input0],
+                                     gc->wires[2 * g->input0 + 1],
+                                     gc->wires[2 * g->input1],
+                                     gc->wires[2 * g->input1 + 1],
+                                     &gc->wires[2 * g->output],
+                                     &gc->wires[2 * g->output + 1],
                                      delta, &gc->table[2 * i], i, key);
     }
 }
@@ -51,12 +51,12 @@ _garble_standard(garble_circuit *gc, const AES_KEY *key, block delta)
         garble_gate *g = &gc->gates[i];
 
         garble_gate_garble_standard(g->type,
-                                    gc->wires[g->input0].label0,
-                                    gc->wires[g->input0].label1,
-                                    gc->wires[g->input1].label0,
-                                    gc->wires[g->input1].label1,
-                                    &gc->wires[g->output].label0,
-                                    &gc->wires[g->output].label1,
+                                    gc->wires[2 * g->input0],
+                                    gc->wires[2 * g->input0 + 1],
+                                    gc->wires[2 * g->input1],
+                                    gc->wires[2 * g->input1 + 1],
+                                    &gc->wires[2 * g->output],
+                                    &gc->wires[2 * g->output + 1],
                                     delta, &gc->table[3 * i], i, key);
     }
 }
@@ -75,40 +75,34 @@ garble_garble(garble_circuit *gc, const block *inputs, block *outputs)
 
     if (inputs) {
         for (uint64_t i = 0; i < gc->n; ++i) {
-            gc->wires[i].label0 = inputs[2 * i];
-            gc->wires[i].label1 = inputs[2 * i + 1];
+            gc->wires[2 * i] = inputs[2 * i];
+            gc->wires[2 * i + 1] = inputs[2 * i + 1];
         }
-        delta = garble_xor(gc->wires[0].label0, gc->wires[0].label1);
+        delta = garble_xor(gc->wires[0], gc->wires[1]);
     } else {
         delta = garble_create_delta();
         for (uint64_t i = 0; i < gc->n; ++i) {
-            gc->wires[i].label0 = garble_random_block();
+            gc->wires[2 * i] = garble_random_block();
             if (gc->type == GARBLE_TYPE_PRIVACY_FREE) {
-                *((char *) &gc->wires[i].label0) &= 0xfe;
+                /* zero label should have 0 permutation bit */
+                *((char *) &gc->wires[2 * i]) &= 0xfe;
             }
-            gc->wires[i].label1 = garble_xor(gc->wires[i].label0, delta);
+            gc->wires[2 * i + 1] = garble_xor(gc->wires[2 * i], delta);
         }
     }
-
-#ifdef DEBUG
-    for (uint64_t i = gc->n; i < gc->r; ++i) {
-        gc->wires[i].label0 = garble_zero_block();
-        gc->wires[i].label1 = garble_zero_block();
-    }
-#endif
 
     gc->fixed_label = garble_random_block();
     for (uint64_t i = 0; i < gc->n_fixed_wires; ++i) {
         switch (gc->fixed_wires[i].type) {
         case GARBLE_FIXED_WIRE_ZERO:
             *((char *) &gc->fixed_label) &= 0xfe;
-            gc->wires[gc->fixed_wires[i].idx].label0 = gc->fixed_label;
-            gc->wires[gc->fixed_wires[i].idx].label1 = garble_xor(gc->fixed_label, delta);
+            gc->wires[2 * gc->fixed_wires[i].idx] = gc->fixed_label;
+            gc->wires[2 * gc->fixed_wires[i].idx + 1] = garble_xor(gc->fixed_label, delta);
             break;
         case GARBLE_FIXED_WIRE_ONE:
             *((char *) &gc->fixed_label) |= 0x01;
-            gc->wires[gc->fixed_wires[i].idx].label0 = garble_xor(gc->fixed_label, delta);
-            gc->wires[gc->fixed_wires[i].idx].label1 = gc->fixed_label;
+            gc->wires[2 * gc->fixed_wires[i].idx] = garble_xor(gc->fixed_label, delta);
+            gc->wires[2 * gc->fixed_wires[i].idx + 1] = gc->fixed_label;
             break;
         }
     }
@@ -132,8 +126,8 @@ garble_garble(garble_circuit *gc, const block *inputs, block *outputs)
 
     if (outputs) {
         for (uint64_t i = 0; i < gc->m; ++i) {
-            outputs[2*i] = gc->wires[gc->outputs[i]].label0;
-            outputs[2*i+1] = gc->wires[gc->outputs[i]].label1;
+            outputs[2*i] = gc->wires[2 * gc->outputs[i]];
+            outputs[2*i+1] = gc->wires[2 * gc->outputs[i] + 1];
         }
     }
 

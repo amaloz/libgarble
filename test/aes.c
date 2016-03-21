@@ -99,10 +99,7 @@ main(int argc, char *argv[])
 
     seed = garble_seed(NULL);
     garble_garble(&gc, NULL, outputMap);
-    for (uint64_t i = 0; i < gc.n; ++i) {
-        inputLabels[2 * i] = gc.wires[i].label0;
-        inputLabels[2 * i + 1] = gc.wires[i].label1;
-    }
+    memcpy(inputLabels, gc.wires, 2 * gc.n * sizeof(block));
     garble_hash(&gc, hash);
 
     {

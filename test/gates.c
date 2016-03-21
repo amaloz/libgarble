@@ -53,8 +53,8 @@ test_circuit(int n, int nlayers, garble_type_e type,
 
     printf("Input:  ");
     for (uint64_t i = 0; i < gc.n; ++i) {
-        inputLabels[2 * i] = gc.wires[i].label0;
-        inputLabels[2 * i + 1] = gc.wires[i].label1;
+        inputLabels[2 * i] = gc.wires[2 * i];
+        inputLabels[2 * i + 1] = gc.wires[2 * i + 1];
         inputs[i] = rand() % 2;
         printf("%d", inputs[i]);
     }

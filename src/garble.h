@@ -33,10 +33,6 @@ typedef enum {
 } garble_gate_type_e;
 
 typedef struct {
-    block label0, label1;
-} garble_wire;
-
-typedef struct {
     /* The type of gate this is */
     garble_gate_type_e type;
     /* The input/output wires associated with this gate */
@@ -64,7 +60,7 @@ typedef struct {
     garble_type_e type;
     garble_gate *gates;         /* q */
     block *table;               /* q */
-    garble_wire *wires;         /* r */
+    block *wires;               /* 2 * r */
     garble_fixed_wire *fixed_wires; /* n_fixed_wires */
     int *outputs;                   /* m */
     block fixed_label;
