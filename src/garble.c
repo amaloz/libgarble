@@ -71,7 +71,7 @@ garble_garble(garble_circuit *gc, const block *inputs, block *outputs)
         return GARBLE_ERR;
 
     if (gc->wires == NULL)
-        gc->wires = calloc(gc->r, sizeof(garble_wire));
+        gc->wires = calloc(2 * gc->r, sizeof(block));
 
     if (inputs) {
         for (uint64_t i = 0; i < gc->n; ++i) {

@@ -136,8 +136,8 @@ am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(garbledir)" \
 	"$(DESTDIR)$(includedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libgarble_la_LIBADD =
-am_libgarble_la_OBJECTS = aes.lo block.lo eval.lo extend_printf.lo \
-	garble.lo gc.lo scd.lo
+am_libgarble_la_OBJECTS = block.lo eval.lo extend_printf.lo garble.lo \
+	gc.lo scd.lo
 libgarble_la_OBJECTS = $(am_libgarble_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -334,7 +334,6 @@ lib_LTLIBRARIES = libgarble.la
 # AM_CFLAGS=$(COMMON_CFLAGS) $(DEV_CFLAGS)
 libgarble_la_LDFLAGS = -no-undefined -version-info 0:1:0
 libgarble_la_SOURCES = \
-	aes.c 	\
 	block.c	\
 	eval.c	\
 	extend_printf.c	\
@@ -431,7 +430,6 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/aes.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/block.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eval.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extend_printf.Plo@am__quote@

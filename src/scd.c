@@ -92,7 +92,7 @@ garble_circuit_from_file(garble_circuit *gc, char *fname)
     gc->gates = calloc(gc->q, sizeof(garble_gate));
     gc->table = NULL;
     /* gc->table = calloc(gc->q, garble_table_size(gc)); */
-    gc->wires = calloc(gc->r, sizeof(garble_wire));
+    gc->wires = calloc(2 * gc->r, sizeof(block));
     gc->outputs = calloc(gc->m, sizeof(int));
     gc->fixed_wires = calloc(gc->n_fixed_wires, sizeof(garble_fixed_wire));
 

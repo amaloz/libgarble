@@ -9,7 +9,6 @@ lib_LTLIBRARIES = libgarble.la
 libgarble_la_LDFLAGS= -no-undefined -version-info 0:1:0
 
 libgarble_la_SOURCES =	\
-	aes.c 	\
 	block.c	\
 	eval.c	\
 	extend_printf.c	\

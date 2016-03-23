@@ -54,7 +54,7 @@
 
 #include "block.h"
     
-typedef struct { block rd_key[15]; int rounds; } AES_KEY;
+typedef struct { block rd_key[11]; unsigned int rounds; } AES_KEY;
 
 #define EXPAND_ASSIST(v1,v2,v3,v4,shuff_const,aes_const)                    \
     v2 = _mm_aeskeygenassist_si128(v4,aes_const);                           \
@@ -67,24 +67,11 @@ typedef struct { block rd_key[15]; int rounds; } AES_KEY;
     v2 = _mm_shuffle_epi32(v2,shuff_const);                                 \
     v1 = _mm_xor_si128(v1,v2)
 
-#define EXPAND192_STEP(idx,aes_const)                                       \
-    EXPAND_ASSIST(x0,x1,x2,x3,85,aes_const);                                \
-    x3 = _mm_xor_si128(x3,_mm_slli_si128 (x3, 4));                          \
-    x3 = _mm_xor_si128(x3,_mm_shuffle_epi32(x0, 255));                      \
-    kp[idx] = _mm_castps_si128(_mm_shuffle_ps(_mm_castsi128_ps(tmp),        \
-                                              _mm_castsi128_ps(x0), 68));   \
-    kp[idx+1] = _mm_castps_si128(_mm_shuffle_ps(_mm_castsi128_ps(x0),       \
-                                                _mm_castsi128_ps(x3), 78)); \
-    EXPAND_ASSIST(x0,x1,x2,x3,85,(aes_const*2));                            \
-    x3 = _mm_xor_si128(x3,_mm_slli_si128 (x3, 4));                          \
-    x3 = _mm_xor_si128(x3,_mm_shuffle_epi32(x0, 255));                      \
-    kp[idx+2] = x0; tmp = x3
-
-inline void
+static inline void
 AES_set_encrypt_key(const block userkey, AES_KEY *key)
 {
     block x0, x1, x2;
-    __m128i *kp = (__m128i *) key;
+    block *kp = key->rd_key;
     kp[0] = x0 = userkey;
     x2 = _mm_setzero_si128();
     EXPAND_ASSIST(x0, x1, x2, x0, 255, 1);
@@ -110,20 +97,19 @@ AES_set_encrypt_key(const block userkey, AES_KEY *key)
     key->rounds = 10;
 }
 
-inline void
-AES_ecb_encrypt_blks(block *blks, unsigned nblks, const AES_KEY *key)
+static inline void
+AES_ecb_encrypt_blks(block *blks, unsigned int nblks, const AES_KEY *key)
 {
-    unsigned i, j, rnds = key->rounds;
-    for (i = 0; i < nblks; ++i)
+    for (unsigned int i = 0; i < nblks; ++i)
         blks[i] = _mm_xor_si128(blks[i], key->rd_key[0]);
-    for (j = 1; j < rnds; ++j)
-        for (i = 0; i < nblks; ++i)
+    for (unsigned int j = 1; j < key->rounds; ++j)
+        for (unsigned int i = 0; i < nblks; ++i)
             blks[i] = _mm_aesenc_si128(blks[i], key->rd_key[j]);
-    for (i = 0; i < nblks; ++i)
-        blks[i] = _mm_aesenclast_si128(blks[i], key->rd_key[j]);
+    for (unsigned int i = 0; i < nblks; ++i)
+        blks[i] = _mm_aesenclast_si128(blks[i], key->rd_key[key->rounds]);
 }
 
-inline void
+static inline void
 AES_set_decrypt_key_fast(AES_KEY *dkey, const AES_KEY *ekey)
 {
     int j = 0;
@@ -137,7 +123,7 @@ AES_set_decrypt_key_fast(AES_KEY *dkey, const AES_KEY *ekey)
     dkey->rd_key[i] = ekey->rd_key[j];
 }
 
-inline void
+static inline void
 AES_set_decrypt_key(block userkey, AES_KEY *key)
 {
     AES_KEY temp_key;
@@ -145,7 +131,7 @@ AES_set_decrypt_key(block userkey, AES_KEY *key)
     AES_set_decrypt_key_fast(key, &temp_key);
 }
 
-inline void
+static inline void
 AES_ecb_decrypt_blks(block *blks, unsigned nblks, const AES_KEY *key)
 {
     unsigned i, j, rnds = key->rounds;

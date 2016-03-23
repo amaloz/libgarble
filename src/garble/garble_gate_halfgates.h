@@ -7,7 +7,7 @@
 #include <assert.h>
 #include <string.h>
 
-inline void
+static inline void
 garble_gate_eval_halfgates(garble_gate_type_e type, block A, block B, block *out,
                            const block *table, uint64_t idx, const AES_KEY *key)
 {
@@ -48,7 +48,7 @@ garble_gate_eval_halfgates(garble_gate_type_e type, block A, block B, block *out
     }
 }
 
-inline void
+static inline void
 garble_gate_garble_halfgates(garble_gate_type_e type, block A0, block A1, block B0,
                              block B1, block *out0, block *out1, block delta,
                              block *table, uint64_t idx, const AES_KEY *key)

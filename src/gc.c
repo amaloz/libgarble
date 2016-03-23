@@ -80,7 +80,7 @@ garble_size(const garble_circuit *gc, bool wires)
     size += sizeof(garble_gate) * gc->q;
     size += garble_table_size(gc) * gc->q;
     if (wires)
-        size += sizeof(garble_wire) * gc->r;
+        size += sizeof(block) * 2 * gc->r;
     size += sizeof(garble_fixed_wire) * gc->n_fixed_wires;
     size += sizeof(int) * gc->m;
     size += sizeof gc->fixed_label;
@@ -110,7 +110,7 @@ garble_to_buffer(const garble_circuit *gc, char *buf, bool wires)
     p += cpy_to_buf(buf + p, gc->gates, sizeof(garble_gate) * gc->q);
     p += cpy_to_buf(buf + p, gc->table, garble_table_size(gc) * gc->q);
     if (wires)
-        p += cpy_to_buf(buf + p, gc->wires, sizeof(garble_wire) * gc->r);
+        p += cpy_to_buf(buf + p, gc->wires, sizeof(block) * 2 * gc->r);
     if (gc->n_fixed_wires > 0) {
         p += cpy_to_buf(buf + p, gc->fixed_wires,
                         sizeof(garble_fixed_wire) * gc->n_fixed_wires);
@@ -139,8 +139,8 @@ garble_from_buffer(garble_circuit *gc, const char *buf, bool wires)
     p += cpy_to_buf(gc->table, buf + p, garble_table_size(gc) * gc->q);
 
     if (wires) {
-        gc->wires = calloc(gc->r, sizeof(garble_wire));
-        p += cpy_to_buf(gc->wires, buf + p, sizeof(garble_wire) * gc->r);
+        gc->wires = calloc(2 * gc->r, sizeof(block));
+        p += cpy_to_buf(gc->wires, buf + p, sizeof(block) * 2 * gc->r);
     } else {
         gc->wires = NULL;
     }
@@ -195,8 +195,8 @@ garble_load(garble_circuit *gc, FILE *f, bool wires)
     p += fread(gc->table, garble_table_size(gc), gc->q, f);
 
     if (wires) {
-        gc->wires = calloc(gc->r, sizeof(garble_wire));
-        p += fread(gc->wires, sizeof(garble_wire), gc->r, f);
+        gc->wires = calloc(2 * gc->r, sizeof(block));
+        p += fread(gc->wires, sizeof(block), 2 * gc->r, f);
     } else {
         gc->wires = NULL;
     }
