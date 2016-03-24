@@ -17,9 +17,10 @@ garble_seed(block *seed)
     if (seed) {
         cur_seed = *seed;
     } else {
-        fprintf(stderr, "** insecure seeding of randomness!\n");
-        srand(time(NULL));
-        cur_seed = _mm_set_epi32(rand(), rand(), rand(), rand());
+        if (RAND_bytes((unsigned char *) &cur_seed, 16) == 0) {
+            fprintf(stderr, "** unable to seed securely\n");
+            return garble_zero_block();
+        }
     }
     AES_set_encrypt_key(cur_seed, &rand_aes_key);
     return cur_seed;
