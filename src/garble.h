@@ -165,7 +165,7 @@ garble_save(const garble_circuit *gc, FILE *f, bool wires);
 int
 garble_load(garble_circuit *gc, FILE *f, bool wires);
 
-void
+int
 garble_to_buffer(const garble_circuit *gc, char *buf, bool wires);
 int
 garble_from_buffer(garble_circuit *gc, const char *buf, bool wires);

@@ -90,10 +90,17 @@ cpy_to_buf(void *out, const void *in, size_t size)
     return size;
 }
 
-void
+int
 garble_to_buffer(const garble_circuit *gc, char *buf, bool wires)
 {
     size_t p = 0;
+
+    if (buf == NULL) {
+        buf = malloc(garble_size(gc, wires));
+        if (buf == NULL)
+            return GARBLE_ERR;
+    }
+        
     p += cpy_to_buf(buf + p, &gc->n, sizeof gc->n);
     p += cpy_to_buf(buf + p, &gc->m, sizeof gc->m);
     p += cpy_to_buf(buf + p, &gc->q, sizeof gc->q);
@@ -108,40 +115,61 @@ garble_to_buffer(const garble_circuit *gc, char *buf, bool wires)
     p += cpy_to_buf(buf + p, gc->outputs, sizeof(bool) * gc->m);
     p += cpy_to_buf(buf + p, &gc->fixed_label, sizeof(block));
     p += cpy_to_buf(buf + p, &gc->global_key, sizeof(block));
+
+    return GARBLE_OK;
 }
 
 int
 garble_from_buffer(garble_circuit *gc, const char *buf, bool wires)
 {
     size_t p = 0;
+
+    if (gc == NULL)
+        return GARBLE_ERR;
+
     p += cpy_to_buf(&gc->n, buf + p, sizeof gc->n);
     p += cpy_to_buf(&gc->m, buf + p, sizeof gc->m);
     p += cpy_to_buf(&gc->q, buf + p, sizeof gc->q);
     p += cpy_to_buf(&gc->r, buf + p, sizeof gc->r);
     p += cpy_to_buf(&gc->type, buf + p, sizeof gc->type);
 
-    if ((gc->gates = malloc(sizeof(garble_gate) * gc->q)) == NULL)
-        return GARBLE_ERR;
+    if ((gc->gates = malloc(sizeof(garble_gate) * gc->q)) == NULL) {
+        goto error;
+    }
     p += cpy_to_buf(gc->gates, buf + p, sizeof(garble_gate) * gc->q);
 
-    gc->table = malloc(garble_table_size(gc) * gc->q);
+    if ((gc->table = malloc(garble_table_size(gc) * gc->q)) == NULL) {
+        goto error;
+    }
+        
     p += cpy_to_buf(gc->table, buf + p, garble_table_size(gc) * gc->q);
 
     if (wires) {
-        gc->wires = calloc(2 * gc->r, sizeof(block));
+        if ((gc->wires = malloc(sizeof(block) * 2 * gc->r)) == NULL) {
+            goto error;
+        }
         p += cpy_to_buf(gc->wires, buf + p, sizeof(block) * 2 * gc->r);
     } else {
         gc->wires = NULL;
     }
 
-    gc->outputs = malloc(sizeof(int) * gc->m);
+    if ((gc->outputs = malloc(sizeof(int) * gc->m)) == NULL) {
+        goto error;
+    }
     p += cpy_to_buf(gc->outputs, buf + p, sizeof(int) * gc->m);
-    gc->output_perms = malloc(sizeof(bool) * gc->m);
+    if ((gc->output_perms = malloc(sizeof(bool) * gc->m)) == NULL) {
+        goto error;
+    }
     p += cpy_to_buf(gc->outputs, buf + p, sizeof(bool) * gc->m);
 
     p += cpy_to_buf(&gc->fixed_label, buf + p, sizeof(block));
     p += cpy_to_buf(&gc->global_key, buf + p, sizeof(block));
-    return GARBLE_OK;                   /* TODO: check mallocs */
+
+    return GARBLE_OK;
+
+error:
+    garble_delete(gc);
+    return GARBLE_ERR;
 }
 
 int
@@ -170,25 +198,33 @@ garble_load(garble_circuit *gc, FILE *f, bool wires)
     p += fread(&gc->type, sizeof gc->type, 1, f);
 
     if ((gc->gates = malloc(sizeof(garble_gate) * gc->q)) == NULL)
-        return GARBLE_ERR;
+        goto error;
     p += fread(gc->gates, sizeof(garble_gate), gc->q, f);
 
-    gc->table = malloc(garble_table_size(gc) * gc->q);
+    if ((gc->table = malloc(garble_table_size(gc) * gc->q)) == NULL)
+        goto error;
     p += fread(gc->table, garble_table_size(gc), gc->q, f);
 
     if (wires) {
-        gc->wires = calloc(2 * gc->r, sizeof(block));
+        if ((gc->wires = malloc(sizeof(block) * 2 * gc->r)) == NULL)
+            goto error;
         p += fread(gc->wires, sizeof(block), 2 * gc->r, f);
     } else {
         gc->wires = NULL;
     }
 
-    gc->outputs = malloc(sizeof(int) * gc->m);
+    if ((gc->outputs = malloc(sizeof(int) * gc->m)) == NULL)
+        goto error;
     p += fread(gc->outputs, sizeof(int), gc->m, f);
-    gc->output_perms = malloc(sizeof(bool) * gc->m);
+    if ((gc->output_perms = malloc(sizeof(bool) * gc->m)) == NULL)
+        goto error;
     p += fread(gc->outputs, sizeof(bool), gc->m, f);
 
     p += fread(&gc->fixed_label, sizeof(block), 1, f);
     p += fread(&gc->global_key, sizeof(block), 1, f);
-    return GARBLE_OK;                   /* TODO: check mallocs */
+    return GARBLE_OK;
+
+error:
+    garble_delete(gc);
+    return GARBLE_ERR;
 }
