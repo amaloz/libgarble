@@ -72,7 +72,7 @@ typedef struct {
 } garble_circuit;
 
 /* Return the table size of a garbled circuit */
-static inline
+inline
 size_t garble_table_size(const garble_circuit *gc)
 {
     switch(gc->type) {
