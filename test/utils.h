@@ -5,9 +5,6 @@
 
 typedef unsigned long long mytime_t;
 
-int
-countToN(int *a, int N);
-
 mytime_t
 current_time_cycles(void);
 mytime_t

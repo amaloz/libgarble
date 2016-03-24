@@ -154,6 +154,8 @@ garble_circuit_to_file(garble_circuit *gc, char *fname);
 int
 garble_circuit_from_file(garble_circuit *gc, char *fname);
 
+void
+garble_init_wires(int *wires, uint64_t n);
 int
 garble_next_wire(garble_context *ctxt);
 

@@ -2,6 +2,13 @@
 
 #include <string.h>
 
+void
+garble_init_wires(int *wires, uint64_t n)
+{
+    for (uint64_t i = 0; i < n; i++)
+        wires[i] = i;
+}
+
 int
 garble_next_wire(garble_context *ctxt)
 {

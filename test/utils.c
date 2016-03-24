@@ -5,14 +5,6 @@
 #include <stdio.h>
 #include <time.h>
 
-int
-countToN(int *a, int n)
-{
-    for (int i = 0; i < n; i++)
-        a[i] = i;
-    return 0;
-}
-
 mytime_t
 current_time_cycles(void)
 {

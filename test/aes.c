@@ -33,7 +33,7 @@ build(garble_circuit *gc, garble_type_e type)
     garble_new(gc, n, m, type);
     garble_start_building(gc, &ctxt);
 
-    countToN(addKeyInputs, 256);
+    garble_init_wires(addKeyInputs, 256);
 
     for (int round = 0; round < roundLimit; ++round) {
 

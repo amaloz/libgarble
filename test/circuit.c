@@ -5,51 +5,51 @@
 
 #include <assert.h>
 
-static void
-build_GF4MULCircuit(garble_circuit *gc, garble_type_e type)
-{
-    garble_context ctxt;
+/* static void */
+/* build_GF4MULCircuit(garble_circuit *gc, garble_type_e type) */
+/* { */
+/*     garble_context ctxt; */
 
-    int inputs[4];
-    int outputs[2];
+/*     int inputs[4]; */
+/*     int outputs[2]; */
 
-    countToN(inputs, 4);
-    garble_new(gc, 4, 2, type);
-    garble_start_building(gc, &ctxt);
-    GF4MULCircuit(gc, &ctxt, inputs, outputs);
-    garble_finish_building(gc, &ctxt, outputs);
-}
+/*     countToN(inputs, 4); */
+/*     garble_new(gc, 4, 2, type); */
+/*     garble_start_building(gc, &ctxt); */
+/*     GF4MULCircuit(gc, &ctxt, inputs, outputs); */
+/*     garble_finish_building(gc, &ctxt, outputs); */
+/* } */
 
-static void
-build_GF16MULCircuit(garble_circuit *gc, garble_type_e type)
-{
-    garble_context ctxt;
+/* static void */
+/* build_GF16MULCircuit(garble_circuit *gc, garble_type_e type) */
+/* { */
+/*     garble_context ctxt; */
 
-    int inputs[4];
-    int outputs[4];
+/*     int inputs[4]; */
+/*     int outputs[4]; */
 
-    countToN(inputs, 4);
-    garble_new(gc, 4, 4, type);
-    garble_start_building(gc, &ctxt);
-    GF16MULCircuit(gc, &ctxt, inputs, outputs);
-    garble_finish_building(gc, &ctxt, outputs);
-    printf("%lu %lu %lu %lu\n", gc->n, gc->m, gc->q, gc->r);
-}
+/*     countToN(inputs, 4); */
+/*     garble_new(gc, 4, 4, type); */
+/*     garble_start_building(gc, &ctxt); */
+/*     GF16MULCircuit(gc, &ctxt, inputs, outputs); */
+/*     garble_finish_building(gc, &ctxt, outputs); */
+/*     printf("%lu %lu %lu %lu\n", gc->n, gc->m, gc->q, gc->r); */
+/* } */
 
-static void
-build_GF256InvCircuit(garble_circuit *gc, garble_type_e type)
-{
-    garble_context ctxt;
+/* static void */
+/* build_GF256InvCircuit(garble_circuit *gc, garble_type_e type) */
+/* { */
+/*     garble_context ctxt; */
 
-    int inputs[8];
-    int outputs[8];
+/*     int inputs[8]; */
+/*     int outputs[8]; */
 
-    countToN(inputs, 8);
-    garble_new(gc, 8, 8, type);
-    garble_start_building(gc, &ctxt);
-    GF256InvCircuit(gc, &ctxt, inputs, outputs);
-    garble_finish_building(gc, &ctxt, outputs);
-}
+/*     countToN(inputs, 8); */
+/*     garble_new(gc, 8, 8, type); */
+/*     garble_start_building(gc, &ctxt); */
+/*     GF256InvCircuit(gc, &ctxt, inputs, outputs); */
+/*     garble_finish_building(gc, &ctxt, outputs); */
+/* } */
 
 static void
 test_garbled_circuit(garble_circuit *gc)
@@ -116,10 +116,10 @@ main(int argc, char *argv[])
         break;
     }
 
-    printf("***** GF4MULCircuit *****\n");
-    build_GF4MULCircuit(&gc, type);
-    test_garbled_circuit(&gc);
-    garble_delete(&gc);
+    /* printf("***** GF4MULCircuit *****\n"); */
+    /* build_GF4MULCircuit(&gc, type); */
+    /* test_garbled_circuit(&gc); */
+    /* garble_delete(&gc); */
 
     /* printf("***** GF16MULCircuit *****\n"); */
     /* build_GF16MULCircuit(&gc, type); */

@@ -17,9 +17,9 @@ build_circuit(garble_circuit *gc, int n, int nlayers, garble_type_e type,
     int *inputs = calloc(n, sizeof(int));
     int *outputs = calloc(n, sizeof(int));
 
-    countToN(inputs, n);
     garble_new(gc, n, n, type);
     garble_start_building(gc, &ctxt);
+    garble_init_wires(inputs, n);
     for (int layer = 0; layer < nlayers; ++layer) {
         for (int i = 0; i < n; i += 2) {
             int wire = garble_next_wire(&ctxt);
@@ -186,13 +186,13 @@ main(int argc, char *argv[])
     }
 
     printf("***** Testing AND *****\n");
-    test_circuit(ninputs, nlayers, type, garble_gate_AND);
+    test_circuit(ninputs, nlayers, type, gate_AND);
     printf("***** Testing OR *****\n");
-    test_circuit(ninputs, nlayers, type, garble_gate_OR);
+    test_circuit(ninputs, nlayers, type, gate_OR);
     printf("***** Testing XOR *****\n");
-    test_circuit(ninputs, nlayers, type, garble_gate_XOR);
+    test_circuit(ninputs, nlayers, type, gate_XOR);
     printf("***** Measuring AND *****\n");
-    measure_circuit(ninputs, nlayers, ntimes, type, garble_gate_AND);
+    measure_circuit(ninputs, nlayers, ntimes, type, gate_AND);
 
     return 0;
 }
