@@ -62,7 +62,8 @@ _garble_standard(garble_circuit *gc, const AES_KEY *key, block delta)
 }
 
 int
-garble_garble(garble_circuit *gc, const block *inputs, block *outputs)
+garble_garble(garble_circuit *gc, const block *input_labels,
+              block *output_labels)
 {
     AES_KEY key;
     block delta;
@@ -70,14 +71,28 @@ garble_garble(garble_circuit *gc, const block *inputs, block *outputs)
     if (gc == NULL)
         return GARBLE_ERR;
 
-    if (gc->wires == NULL)
+    if (gc->wires == NULL) {
         gc->wires = calloc(2 * gc->r, sizeof(block));
+        if (gc->wires == NULL)
+            return GARBLE_ERR;
+    }
+    if (gc->table == NULL) {
+        gc->table = calloc(gc->q, garble_table_size(gc));
+        if (gc->table == NULL)
+            return GARBLE_ERR;
+    }
+    if (gc->output_perms == NULL) {
+        gc->output_perms = calloc(gc->m, sizeof(bool));
+        if (gc->output_perms == NULL)
+            return GARBLE_ERR;
+    }
 
-    if (inputs) {
+    if (input_labels) {
         for (uint64_t i = 0; i < gc->n; ++i) {
-            gc->wires[2 * i] = inputs[2 * i];
-            gc->wires[2 * i + 1] = inputs[2 * i + 1];
+            gc->wires[2 * i] = input_labels[2 * i];
+            gc->wires[2 * i + 1] = input_labels[2 * i + 1];
         }
+        /* assumes same delta for all 0/1 labels in 'inputs' */
         delta = garble_xor(gc->wires[0], gc->wires[1]);
     } else {
         delta = garble_create_delta();
@@ -91,6 +106,7 @@ garble_garble(garble_circuit *gc, const block *inputs, block *outputs)
         }
     }
 
+    /* XXX: fixed labels should be done in a better way so we don't copy them */
     gc->fixed_label = garble_random_block();
     for (uint64_t i = 0; i < gc->n_fixed_wires; ++i) {
         switch (gc->fixed_wires[i].type) {
@@ -109,8 +125,6 @@ garble_garble(garble_circuit *gc, const block *inputs, block *outputs)
 
     gc->global_key = garble_random_block();
     AES_set_encrypt_key(gc->global_key, &key);
-    if (gc->table == NULL)
-        gc->table = calloc(gc->q, garble_table_size(gc));
 
     switch (gc->type) {
     case GARBLE_TYPE_STANDARD:
@@ -124,10 +138,14 @@ garble_garble(garble_circuit *gc, const block *inputs, block *outputs)
         break;
     }
 
-    if (outputs) {
+    for (uint64_t i = 0; i < gc->m; ++i) {
+        gc->output_perms[i] = *((char *) &gc->wires[2 * gc->outputs[i]]) & 0x1;
+    }
+
+    if (output_labels) {
         for (uint64_t i = 0; i < gc->m; ++i) {
-            outputs[2*i] = gc->wires[2 * gc->outputs[i]];
-            outputs[2*i+1] = gc->wires[2 * gc->outputs[i] + 1];
+            output_labels[2*i] = gc->wires[2 * gc->outputs[i]];
+            output_labels[2*i+1] = gc->wires[2 * gc->outputs[i] + 1];
         }
     }
 

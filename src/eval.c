@@ -64,7 +64,8 @@ _eval_standard(const garble_circuit *gc, block *labels, AES_KEY *key)
 }
 
 int
-garble_eval(const garble_circuit *gc, const block *inputs, block *outputs)
+garble_eval(const garble_circuit *gc, const block *input_labels,
+            block *output_labels, bool *outputs)
 {
     AES_KEY key;
     block *labels;
@@ -77,7 +78,7 @@ garble_eval(const garble_circuit *gc, const block *inputs, block *outputs)
     labels = garble_allocate_blocks(gc->r);
 
     /* Set input wire labels */
-    memcpy(labels, inputs, gc->n * sizeof inputs[0]);
+    memcpy(labels, input_labels, gc->n * sizeof input_labels[0]);
 
     /* Set fixed wire labels */
     fixed_label = gc->fixed_label;
@@ -106,10 +107,16 @@ garble_eval(const garble_circuit *gc, const block *inputs, block *outputs)
         break;
     }
 
-    /* Set output wire labels */
+
+    if (output_labels) {
+        for (uint64_t i = 0; i < gc->m; ++i) {
+            output_labels[i] = labels[gc->outputs[i]];
+        }
+    }
     if (outputs) {
-        for (uint64_t i = 0; i < gc->m; i++) {
-            outputs[i] = labels[gc->outputs[i]];
+        for (uint64_t i = 0; i < gc->m; ++i) {
+            outputs[i] =
+                (*((char *) &labels[gc->outputs[i]]) & 0x1) ^ gc->output_perms[i];
         }
     }
 
@@ -119,25 +126,24 @@ garble_eval(const garble_circuit *gc, const block *inputs, block *outputs)
 }
 
 void
-garble_extract_labels(block *extracted, const block *labels, const bool *bits,
-                      uint64_t n)
+garble_extract_labels(block *extracted_labels, const block *labels,
+                      const bool *bits, uint64_t n)
 {
     for (uint64_t i = 0; i < n; ++i) {
-        extracted[i] = labels[2 * i + (bits[i] ? 1 : 0)];
+        extracted_labels[i] = labels[2 * i + (bits[i] ? 1 : 0)];
     }
 }
 
 int
-garble_map_outputs(const block *outputs, const block *map, bool *vals,
+garble_map_outputs(const block *output_labels, const block *map, bool *vals,
                    uint64_t m)
 {
     for (uint64_t i = 0; i < m; i++) {
-        if (garble_equal(map[i], outputs[2 * i])) {
+        if (garble_equal(map[i], output_labels[2 * i])) {
             vals[i] = 0;
-        } else if (garble_equal(map[i], outputs[2 * i + 1])) {
+        } else if (garble_equal(map[i], output_labels[2 * i + 1])) {
             vals[i] = 1;
         } else {
-            printf("MAP OUTPUTS FAILED %ld\n", i);
             return GARBLE_ERR;
         }
     }

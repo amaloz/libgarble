@@ -2,9 +2,6 @@
 
 #include <string.h>
 
-extern inline
-size_t garble_table_size(const garble_circuit *gc);
-
 int
 garble_next_wire(garble_context *ctxt)
 {
@@ -22,6 +19,7 @@ garble_new(garble_circuit *gc, uint64_t n, uint64_t m, garble_type_e type)
     gc->outputs = calloc(m, sizeof(int));
     gc->wires = NULL;
     gc->table = NULL;
+    gc->output_perms = NULL;
 
     gc->type = type;
     gc->n = n;
@@ -49,6 +47,8 @@ garble_delete(garble_circuit *gc)
         free(gc->fixed_wires);
     if (gc->outputs)
         free(gc->outputs);
+    if (gc->output_perms)
+        free(gc->output_perms);
 }
 
 void
@@ -83,6 +83,7 @@ garble_size(const garble_circuit *gc, bool wires)
         size += sizeof(block) * 2 * gc->r;
     size += sizeof(garble_fixed_wire) * gc->n_fixed_wires;
     size += sizeof(int) * gc->m;
+    size += sizeof(bool) * gc->m;
     size += sizeof gc->fixed_label;
     size += sizeof gc->global_key;
 
@@ -116,6 +117,7 @@ garble_to_buffer(const garble_circuit *gc, char *buf, bool wires)
                         sizeof(garble_fixed_wire) * gc->n_fixed_wires);
     }
     p += cpy_to_buf(buf + p, gc->outputs, sizeof(int) * gc->m);
+    p += cpy_to_buf(buf + p, gc->outputs, sizeof(bool) * gc->m);
     p += cpy_to_buf(buf + p, &gc->fixed_label, sizeof(block));
     p += cpy_to_buf(buf + p, &gc->global_key, sizeof(block));
 }
@@ -155,6 +157,8 @@ garble_from_buffer(garble_circuit *gc, const char *buf, bool wires)
 
     gc->outputs = malloc(sizeof(int) * gc->m);
     p += cpy_to_buf(gc->outputs, buf + p, sizeof(int) * gc->m);
+    gc->output_perms = malloc(sizeof(bool) * gc->m);
+    p += cpy_to_buf(gc->outputs, buf + p, sizeof(bool) * gc->m);
 
     p += cpy_to_buf(&gc->fixed_label, buf + p, sizeof(block));
     p += cpy_to_buf(&gc->global_key, buf + p, sizeof(block));
@@ -211,6 +215,8 @@ garble_load(garble_circuit *gc, FILE *f, bool wires)
 
     gc->outputs = malloc(sizeof(int) * gc->m);
     p += fread(gc->outputs, sizeof(int), gc->m, f);
+    gc->output_perms = malloc(sizeof(bool) * gc->m);
+    p += fread(gc->outputs, sizeof(bool), gc->m, f);
 
     p += fread(&gc->fixed_label, sizeof(block), 1, f);
     p += fread(&gc->global_key, sizeof(block), 1, f);

@@ -33,7 +33,7 @@ garble_circuit_to_file(garble_circuit *gc, char *fname)
     pk = msgpack_packer_new(buffer, msgpack_sbuffer_write);
     msgpack_sbuffer_clear(buffer);
 
-    msgpack_pack_array(pk, 4 + 4 * gc->q + 2 * gc->n_fixed_wires + gc->m);
+    msgpack_pack_array(pk, 4 + 4 * gc->q + 2 * gc->n_fixed_wires + gc->m + gc->m);
     msgpack_pack_int(pk, gc->n);
     msgpack_pack_int(pk, gc->m);
     msgpack_pack_int(pk, gc->q);
@@ -50,6 +50,9 @@ garble_circuit_to_file(garble_circuit *gc, char *fname)
     }
     for (uint64_t i = 0; i < gc->m; ++i) {
         msgpack_pack_int(pk, gc->outputs[i]);
+    }
+    for (uint64_t i = 0; i < gc->m; ++i) {
+        msgpack_pack_int(pk, gc->output_perms[i]);
     }
     fwrite(buffer->data, sizeof(char), buffer->size, f);
     fclose(f);
@@ -108,6 +111,9 @@ garble_circuit_from_file(garble_circuit *gc, char *fname)
     }
     for (uint64_t i = 0; i < gc->m; ++i) {
         gc->outputs[i] = (*p++).via.i64;
+    }
+    for (uint64_t i = 0; i < gc->m; ++i) {
+        gc->output_perms[i] = (*p++).via.i64;
     }
     msgpack_unpacked_destroy(&msg);
 

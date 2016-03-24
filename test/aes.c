@@ -93,9 +93,6 @@ main(int argc, char *argv[])
     }
 
     build(&gc, type);
-    /* garble_to_file(&gc, AES_CIRCUIT_FILE_NAME); */
-    /* garble_delete(&gc); */
-    /* garble_from_file(&gc, AES_CIRCUIT_FILE_NAME); */
 
     seed = garble_seed(NULL);
     garble_garble(&gc, NULL, outputMap);
@@ -105,12 +102,16 @@ main(int argc, char *argv[])
     {
         block *computedOutputMap = garble_allocate_blocks(m);
         bool *outputVals = calloc(m, sizeof(bool));
+        bool *outputVals2 = calloc(m, sizeof(bool));
         for (int i = 0; i < n; ++i) {
             inputs[i] = rand() % 2;
         }
         garble_extract_labels(extractedLabels, inputLabels, inputs, gc.n);
-        garble_eval(&gc, extractedLabels, computedOutputMap);
-        assert(garble_map_outputs(outputMap, computedOutputMap, outputVals, m) == GARBLE_OK);
+        garble_eval(&gc, extractedLabels, computedOutputMap, outputVals);
+        assert(garble_map_outputs(outputMap, computedOutputMap, outputVals2, m) == GARBLE_OK);
+        for (uint64_t i = 0; i < gc.m; ++i) {
+            assert(outputVals[i] == outputVals2[i]);
+        }
         {
             garble_circuit gc2;
 
@@ -122,6 +123,7 @@ main(int argc, char *argv[])
         }
         free(computedOutputMap);
         free(outputVals);
+        free(outputVals2);
     }
     {
         mytime_t start, end;
@@ -130,6 +132,7 @@ main(int argc, char *argv[])
         mytime_t *timeEval = calloc(times, sizeof(mytime_t));
         double *timeGarbleMedians = calloc(times, sizeof(double));
         double *timeEvalMedians = calloc(times, sizeof(double));
+        bool *outputs = calloc(m, sizeof(bool));
 
         for (int j = 0; j < times; j++) {
             for (int i = 0; i < times; i++) {
@@ -143,7 +146,7 @@ main(int argc, char *argv[])
                 start = current_time_cycles();
                 {
                     garble_extract_labels(extractedLabels, inputLabels, inputs, gc.n);
-                    garble_eval(&gc, extractedLabels, outputMap);
+                    garble_eval(&gc, extractedLabels, NULL, outputs);
                 }
                 end = current_time_cycles();
                 timeEval[i] = end - start;
@@ -159,19 +162,23 @@ main(int argc, char *argv[])
         free(timeEval);
         free(timeGarbleMedians);
         free(timeEvalMedians);
+        free(outputs);
     }
 
     {
         unsigned long long start, end;
+        bool *outputs = calloc(m, sizeof(bool));
 
         start = current_time_ns();
         for (int i = 0; i < 1000; ++i) {
             (void) garble_garble(&gc, inputLabels, outputMap);
             garble_extract_labels(extractedLabels, inputLabels, inputs, gc.n);
-            garble_eval(&gc, extractedLabels, outputMap);
+            garble_eval(&gc, extractedLabels, NULL, outputs);
         }
         end = current_time_ns();
         printf("%llu\n", (end - start) / 1000);
+
+        free(outputs);
     }
 
     garble_delete(&gc);

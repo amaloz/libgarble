@@ -72,7 +72,7 @@ test_garbled_circuit(garble_circuit *gc)
     }
     printf("\n");
     garble_extract_labels(extractedLabels, inputLabels, inputs, gc->n);
-    garble_eval(gc, extractedLabels, computedOutputLabels);
+    garble_eval(gc, extractedLabels, computedOutputLabels, NULL);
     assert(garble_map_outputs(outputLabels, computedOutputLabels, outputs, gc->m) == GARBLE_OK);
     printf("Output: ");
     for (uint64_t i = 0; i < gc->m; ++i) {
@@ -121,15 +121,15 @@ main(int argc, char *argv[])
     test_garbled_circuit(&gc);
     garble_delete(&gc);
 
-    printf("***** GF16MULCircuit *****\n");
-    build_GF16MULCircuit(&gc, type);
-    test_garbled_circuit(&gc);
-    garble_delete(&gc);
+    /* printf("***** GF16MULCircuit *****\n"); */
+    /* build_GF16MULCircuit(&gc, type); */
+    /* test_garbled_circuit(&gc); */
+    /* garble_delete(&gc); */
 
-    printf("***** GF256InvCircuit *****\n");
-    build_GF256InvCircuit(&gc, type);
-    test_garbled_circuit(&gc);
-    garble_delete(&gc);
+    /* printf("***** GF256InvCircuit *****\n"); */
+    /* build_GF256InvCircuit(&gc, type); */
+    /* test_garbled_circuit(&gc); */
+    /* garble_delete(&gc); */
 
     return 0;
 }

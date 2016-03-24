@@ -60,7 +60,7 @@ test_circuit(int n, int nlayers, garble_type_e type,
     }
     printf("\n");
     garble_extract_labels(extractedLabels, inputLabels, inputs, n);
-    garble_eval(&gc, extractedLabels, computedOutputLabels);
+    garble_eval(&gc, extractedLabels, computedOutputLabels, NULL);
     assert(garble_map_outputs(outputLabels, computedOutputLabels, outputs, gc.m) == GARBLE_OK);
     printf("Output: ");
     for (uint64_t i = 0; i < gc.m; ++i) {
@@ -122,7 +122,7 @@ measure_circuit(int n, int nlayers, int ntimes, garble_type_e type,
             start = current_time_cycles();
             {
                 garble_extract_labels(extractedLabels, inputLabels, inputs, gc.n);
-                garble_eval(&gc, extractedLabels, outputMap);
+                garble_eval(&gc, extractedLabels, outputMap, NULL);
             }
             end = current_time_cycles();
             timeEval[i] = end - start;
