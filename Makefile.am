@@ -1,3 +1,3 @@
 ACLOCAL_AMFLAGS = '-Ibuild/autoconf'
 
-SUBDIRS = src circ test
+SUBDIRS = src builder test

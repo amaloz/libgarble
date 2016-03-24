@@ -47,5 +47,5 @@ fi
 
 AC_FUNC_MALLOC
 
-AC_CONFIG_FILES([Makefile src/Makefile circ/Makefile test/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile builder/Makefile test/Makefile])
 AC_OUTPUT

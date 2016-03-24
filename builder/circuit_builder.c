@@ -1,5 +1,35 @@
 #include <garble.h>
-#include "gates.h"
+#include "circuit_builder.h"
+
+void
+builder_init_wires(int *wires, uint64_t n)
+{
+    for (uint64_t i = 0; i < n; i++)
+        wires[i] = i;
+}
+
+int
+builder_next_wire(garble_context *ctxt)
+{
+    return ctxt->wire_index++;
+}
+
+void
+builder_start_building(garble_circuit *gc, garble_context *ctxt)
+{
+    ctxt->wire_index = gc->n + 2; /* start at first non-input, non-fixed wire */
+    ctxt->n_gates = 0;
+}
+
+void
+builder_finish_building(garble_circuit *gc, garble_context *ctxt,
+                       const int *outputs)
+{
+    gc->r = ctxt->wire_index + gc->q;
+    for (uint64_t i = 0; i < gc->m; ++i) {
+        gc->outputs[i] = outputs[i];
+    }
+}
 
 static void
 _gate(garble_circuit *gc, garble_context *ctxt, int input0, int input1,

@@ -2,19 +2,6 @@
 
 #include <string.h>
 
-void
-garble_init_wires(int *wires, uint64_t n)
-{
-    for (uint64_t i = 0; i < n; i++)
-        wires[i] = i;
-}
-
-int
-garble_next_wire(garble_context *ctxt)
-{
-    return ctxt->wire_index++;
-}
-
 int
 garble_new(garble_circuit *gc, uint64_t n, uint64_t m, garble_type_e type)
 {
@@ -52,23 +39,6 @@ garble_delete(garble_circuit *gc)
         free(gc->outputs);
     if (gc->output_perms)
         free(gc->output_perms);
-}
-
-void
-garble_start_building(garble_circuit *gc, garble_context *ctxt)
-{
-    ctxt->wire_index = gc->n + 2; /* start at first non-input, non-fixed wire */
-    ctxt->n_gates = 0;
-}
-
-void
-garble_finish_building(garble_circuit *gc, garble_context *ctxt,
-                       const int *outputs)
-{
-    gc->r = ctxt->wire_index + gc->q;
-    for (uint64_t i = 0; i < gc->m; ++i) {
-        gc->outputs[i] = outputs[i];
-    }
 }
 
 size_t

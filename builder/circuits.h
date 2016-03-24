@@ -2,6 +2,7 @@
 #define LIBGARBLEC_CIRCUITS_H
 
 #include <garble.h>
+#include "circuit_builder.h"
 
 void
 circuit_and(garble_circuit *gc, garble_context *ctxt, uint64_t n,

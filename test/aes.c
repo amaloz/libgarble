@@ -31,10 +31,8 @@ build(garble_circuit *gc, garble_type_e type)
     int mixColumnOutputs[128];
 
     garble_new(gc, n, m, type);
-    garble_start_building(gc, &ctxt);
-
-    garble_init_wires(addKeyInputs, 256);
-
+    builder_start_building(gc, &ctxt);
+    builder_init_wires(addKeyInputs, 256);
     for (int round = 0; round < roundLimit; ++round) {
 
         aescircuit_add_round_key(gc, &ctxt, addKeyInputs, addKeyOutputs);
@@ -56,7 +54,7 @@ build(garble_circuit *gc, garble_type_e type)
             addKeyInputs[i + 128] = (round + 2) * 128 + i;
         }
     }
-    garble_finish_building(gc, &ctxt, mixColumnOutputs);
+    builder_finish_building(gc, &ctxt, mixColumnOutputs);
 }
 
 int

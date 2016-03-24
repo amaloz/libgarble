@@ -1,11 +1,11 @@
 AM_CFLAGS = \
 	-I$(top_srcdir)/src	\
-	-I$(top_srcdir)/circ \
+	-I$(top_srcdir)/builder \
 	-lmsgpackc
 
 AM_LDFLAGS = \
 	$(top_builddir)/src/libgarble.la	\
-	$(top_builddir)/circ/libgarblec.la
+	$(top_builddir)/builder/libgarblec.la
 
 check_PROGRAMS = \
 	aes	\

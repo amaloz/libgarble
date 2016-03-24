@@ -86,26 +86,12 @@ size_t garble_table_size(const garble_circuit *gc)
     return 0;
 }
 
-/* Context info for building a circuit description */
-typedef struct {
-    uint64_t wire_index;
-    uint64_t n_gates;
-} garble_context;
-
 /* Create a new circuit */
 int
 garble_new(garble_circuit *gc, uint64_t n, uint64_t m, garble_type_e type);
 /* Delete a garbled circuit */
 void
 garble_delete(garble_circuit *gc);
-
-/* Call this before constructing a new circuit */
-void
-garble_start_building(garble_circuit *gc, garble_context *ctxt);
-/* Call this after completing the construction of a circuit */
-void
-garble_finish_building(garble_circuit *gc, garble_context *ctxt,
-                       const int *outputs);
 
 /* Garbles a circuit.
    If 'input_labels' is NULL, generate input-wire labels.
@@ -153,11 +139,6 @@ int
 garble_circuit_to_file(garble_circuit *gc, char *fname);
 int
 garble_circuit_from_file(garble_circuit *gc, char *fname);
-
-void
-garble_init_wires(int *wires, uint64_t n);
-int
-garble_next_wire(garble_context *ctxt);
 
 size_t
 garble_size(const garble_circuit *gc, bool wires);

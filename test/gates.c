@@ -18,17 +18,17 @@ build_circuit(garble_circuit *gc, int n, int nlayers, garble_type_e type,
     int *outputs = calloc(n, sizeof(int));
 
     garble_new(gc, n, n, type);
-    garble_start_building(gc, &ctxt);
-    garble_init_wires(inputs, n);
+    builder_start_building(gc, &ctxt);
+    builder_init_wires(inputs, n);
     for (int layer = 0; layer < nlayers; ++layer) {
         for (int i = 0; i < n; i += 2) {
-            int wire = garble_next_wire(&ctxt);
+            int wire = builder_next_wire(&ctxt);
             f(gc, &ctxt, inputs[i], inputs[i + 1], wire);
             outputs[i] = outputs[i + 1] = wire;
         }
         memcpy(inputs, outputs, n * sizeof(int));
     }
-    garble_finish_building(gc, &ctxt, outputs);
+    builder_finish_building(gc, &ctxt, outputs);
 
     free(inputs);
     free(outputs);

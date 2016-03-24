@@ -1,6 +1,4 @@
 #include <garble.h>
-
-#include "gates.h"
 #include "circuits.h"
 
 /*******
@@ -25,7 +23,7 @@ _encoder_zero(garble_circuit *gc, garble_context *ctxt, const int inputs[8],
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
             if (fbits(enc[i], j)) {
-                int wire = garble_next_wire(ctxt);
+                int wire = builder_next_wire(ctxt);
                 gate_XOR(gc, ctxt, wires[j], inputs[i], wire);
                 wires[j] = wire;
             }
@@ -47,7 +45,7 @@ _encoder_one(garble_circuit *gc, garble_context *ctxt, const int inputs[8],
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
             if (fbits(enc[i], j)) {
-                int wire = garble_next_wire(ctxt);
+                int wire = builder_next_wire(ctxt);
                 gate_XOR(gc, ctxt, wires[j], inputs[i], wire);
                 wires[j] = wire;
             }
