@@ -19,40 +19,39 @@ _gate(garble_circuit *gc, garble_context *ctxt, int input0, int input1,
 }
 
 void
-garble_gate_AND(garble_circuit *gc, garble_context *ctxt, int input0,
-                int input1, int output)
+gate_AND(garble_circuit *gc, garble_context *ctxt, int input0, int input1,
+         int output)
 {
     _gate(gc, ctxt, input0, input1, output, GARBLE_GATE_AND);
 }
 
 void
-garble_gate_XOR(garble_circuit *gc, garble_context *ctxt, int input0,
-                int input1, int output)
+gate_XOR(garble_circuit *gc, garble_context *ctxt, int input0, int input1,
+         int output)
 {
     _gate(gc, ctxt, input0, input1, output, GARBLE_GATE_XOR);
 }
 
 void
-garble_gate_OR(garble_circuit *gc, garble_context *ctxt, int input0,
-               int input1, int output)
+gate_OR(garble_circuit *gc, garble_context *ctxt, int input0, int input1,
+        int output)
 {
     _gate(gc, ctxt, input0, input1, output, GARBLE_GATE_OR);
 }
 
 void
-garble_gate_NOT(garble_circuit *gc, garble_context *ctxt, int input0,
-                int output)
+gate_NOT(garble_circuit *gc, garble_context *ctxt, int input0, int output)
 {
     _gate(gc, ctxt, input0, input0, output, GARBLE_GATE_NOT);
 }
 
 int
-garble_gate_zero(garble_circuit *gc)
+wire_zero(garble_circuit *gc)
 {
     return gc->n;
 }
 int
-garble_gate_one(garble_circuit *gc)
+wire_one(garble_circuit *gc)
 {
     return gc->n + 1;
 }

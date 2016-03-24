@@ -37,18 +37,19 @@ build(garble_circuit *gc, garble_type_e type)
 
     for (int round = 0; round < roundLimit; ++round) {
 
-        AddRoundKey(gc, &ctxt, addKeyInputs, addKeyOutputs);
+        aescircuit_add_round_key(gc, &ctxt, addKeyInputs, addKeyOutputs);
 
         for (int i = 0; i < 16; ++i) {
-            SubBytes(gc, &ctxt, addKeyOutputs + 8 * i, subBytesOutputs + 8 * i);
+            aescircuit_sub_bytes(gc, &ctxt, addKeyOutputs + 8 * i,
+                                 subBytesOutputs + 8 * i);
         }
 
-        ShiftRows(subBytesOutputs, shiftRowsOutputs);
+        aescircuit_shift_rows(subBytesOutputs, shiftRowsOutputs);
 
         for (int i = 0; i < 4; i++) {
             if (round != roundLimit - 1)
-                MixColumns(gc, &ctxt, shiftRowsOutputs + i * 32,
-                           mixColumnOutputs + 32 * i);
+                aescircuit_mix_columns(gc, &ctxt, shiftRowsOutputs + i * 32,
+                                       mixColumnOutputs + 32 * i);
         }
         for (int i = 0; i < 128; i++) {
             addKeyInputs[i] = mixColumnOutputs[i];
