@@ -106,21 +106,16 @@ garble_garble(garble_circuit *gc, const block *input_labels,
         }
     }
 
-    /* XXX: fixed labels should be done in a better way so we don't copy them */
-    gc->fixed_label = garble_random_block();
-    for (uint64_t i = 0; i < gc->n_fixed_wires; ++i) {
-        switch (gc->fixed_wires[i].type) {
-        case GARBLE_FIXED_WIRE_ZERO:
-            *((char *) &gc->fixed_label) &= 0xfe;
-            gc->wires[2 * gc->fixed_wires[i].idx] = gc->fixed_label;
-            gc->wires[2 * gc->fixed_wires[i].idx + 1] = garble_xor(gc->fixed_label, delta);
-            break;
-        case GARBLE_FIXED_WIRE_ONE:
-            *((char *) &gc->fixed_label) |= 0x01;
-            gc->wires[2 * gc->fixed_wires[i].idx] = garble_xor(gc->fixed_label, delta);
-            gc->wires[2 * gc->fixed_wires[i].idx + 1] = gc->fixed_label;
-            break;
-        }
+    {
+        block fixed_label = garble_random_block();
+        gc->fixed_label = fixed_label;
+
+        *((char *) &fixed_label) &= 0xfe;
+        gc->wires[2 * gc->n] = fixed_label;
+        gc->wires[2 * gc->n + 1] = garble_xor(fixed_label, delta);
+        *((char *) &fixed_label) |= 0x01;
+        gc->wires[2 * (gc->n + 1)] = fixed_label;
+        gc->wires[2 * (gc->n + 1) + 1] = garble_xor(fixed_label, delta);
     }
 
     gc->global_key = garble_random_block();

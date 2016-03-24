@@ -20,7 +20,7 @@ EncoderZeroCircuit(garble_circuit *gc, garble_context *ctxt,
 {
     int wires[8];
     for (int i = 0; i < 8; i++) {
-        wires[i] = garble_gate_zero(gc, ctxt);
+        wires[i] = garble_gate_zero(gc);
     }
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
@@ -42,7 +42,7 @@ EncoderOneCircuit(garble_circuit *gc, garble_context *ctxt, const int inputs[8],
 {
     int wires[8];
     for (int i = 0; i < 8; i++) {
-        wires[i] = garble_gate_one(gc, ctxt);
+        wires[i] = garble_gate_one(gc);
     }
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {

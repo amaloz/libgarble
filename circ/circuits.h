@@ -59,12 +59,12 @@ void
 INCCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n,
            const int *inputs, int *outputs);
 
-int
+void
 SHLCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n,
-           int *inputs, int *outputs);
-int
+           const int *inputs, int *outputs);
+void
 SHRCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n,
-           int *inputs, int *outputs);
+           const int *inputs, int *outputs);
 int
 MULCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n,
            int *inputs, int *outputs);
@@ -108,9 +108,9 @@ SquareCircuit(garble_circuit *gc, garble_context *ctxt, int inputs[4],
 int
 MixColumns(garble_circuit *gc, garble_context *ctxt, const int *inputs,
            int *outputs);
-int
+void
 SUBCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n,
-           int *inputs, int *outputs);
+           const int *inputs, int *outputs);
 int
 MULTGF16(garble_circuit *gc, garble_context *ctxt, int* inputs,
          int* outputs);

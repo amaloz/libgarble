@@ -54,16 +54,14 @@ typedef struct {
     /* m: number of outputs */
     /* q: number of gates */
     /* r: number of wires */
-    /* n_fixed_wires: number of fixed wires */
-    uint64_t n, m, q, r, n_fixed_wires;
+    uint64_t n, m, q, r;
     /* garbling scheme type */
     garble_type_e type;
 
     garble_gate *gates;         /* q */
     block *table;               /* q */
     block *wires;               /* 2 * r */
-    garble_fixed_wire *fixed_wires; /* n_fixed_wires */
-    int *outputs;                   /* m */
+    int *outputs;               /* m */
 
     /* permutation bits of output wire labels */
     bool *output_perms;
@@ -91,7 +89,6 @@ size_t garble_table_size(const garble_circuit *gc)
 /* Context info for building a circuit description */
 typedef struct {
     uint64_t wire_index;
-    uint64_t n_fixed_wires;
     uint64_t n_gates;
 } garble_context;
 

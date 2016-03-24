@@ -16,8 +16,8 @@ void
 garble_gate_NOT(garble_circuit *gc, garble_context *ctxt, int input0,
                 int output);
 int
-garble_gate_zero(garble_circuit *gc, garble_context *ctxt);
+garble_gate_zero(garble_circuit *gc);
 int
-garble_gate_one(garble_circuit *gc, garble_context *ctxt);
+garble_gate_one(garble_circuit *gc);
 
 #endif

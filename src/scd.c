@@ -33,20 +33,15 @@ garble_circuit_to_file(garble_circuit *gc, char *fname)
     pk = msgpack_packer_new(buffer, msgpack_sbuffer_write);
     msgpack_sbuffer_clear(buffer);
 
-    msgpack_pack_array(pk, 4 + 4 * gc->q + 2 * gc->n_fixed_wires + gc->m + gc->m);
+    msgpack_pack_array(pk, 3 + 4 * gc->q + gc->m + gc->m);
     msgpack_pack_int(pk, gc->n);
     msgpack_pack_int(pk, gc->m);
     msgpack_pack_int(pk, gc->q);
-    msgpack_pack_int(pk, gc->n_fixed_wires);
     for (uint64_t i = 0; i < gc->q; ++i) {
         msgpack_pack_int(pk, gc->gates[i].input0);
         msgpack_pack_int(pk, gc->gates[i].input1);
         msgpack_pack_int(pk, gc->gates[i].output);
         msgpack_pack_int(pk, gc->gates[i].type);
-    }
-    for (uint64_t i = 0; i < gc->n_fixed_wires; ++i) {
-        msgpack_pack_int(pk, gc->fixed_wires[i].type);
-        msgpack_pack_int(pk, gc->fixed_wires[i].idx);
     }
     for (uint64_t i = 0; i < gc->m; ++i) {
         msgpack_pack_int(pk, gc->outputs[i]);
@@ -89,25 +84,19 @@ garble_circuit_from_file(garble_circuit *gc, char *fname)
     gc->n = (*p++).via.i64;
     gc->m = (*p++).via.i64;
     gc->q = (*p++).via.i64;
-    gc->n_fixed_wires = (*p++).via.i64;
-    gc->r = gc->n + gc->q + gc->n_fixed_wires;
+    gc->r = gc->n + gc->q;
 
     gc->gates = calloc(gc->q, sizeof(garble_gate));
     gc->table = NULL;
     /* gc->table = calloc(gc->q, garble_table_size(gc)); */
     gc->wires = calloc(2 * gc->r, sizeof(block));
     gc->outputs = calloc(gc->m, sizeof(int));
-    gc->fixed_wires = calloc(gc->n_fixed_wires, sizeof(garble_fixed_wire));
 
     for (uint64_t i = 0; i < gc->q; ++i) {
         gc->gates[i].input0 = (*p++).via.i64;
         gc->gates[i].input1 = (*p++).via.i64;
         gc->gates[i].output = (*p++).via.i64;
         gc->gates[i].type = (*p++).via.i64;
-    }
-    for (uint64_t i = 0; i < gc->n_fixed_wires; ++i) {
-        gc->fixed_wires[i].type = (*p++).via.i64;
-        gc->fixed_wires[i].idx = (*p++).via.i64;
     }
     for (uint64_t i = 0; i < gc->m; ++i) {
         gc->outputs[i] = (*p++).via.i64;

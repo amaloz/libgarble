@@ -15,7 +15,6 @@ garble_new(garble_circuit *gc, uint64_t n, uint64_t m, garble_type_e type)
         return GARBLE_ERR;
 
     gc->gates = NULL;
-    gc->fixed_wires = NULL;
     gc->outputs = calloc(m, sizeof(int));
     gc->wires = NULL;
     gc->table = NULL;
@@ -28,7 +27,6 @@ garble_new(garble_circuit *gc, uint64_t n, uint64_t m, garble_type_e type)
     gc->q = 0;
     /* r is set in garble_finish_building() */
     gc->r = 0;
-    gc->n_fixed_wires = 0;
     return GARBLE_OK;
 }
 
@@ -43,8 +41,6 @@ garble_delete(garble_circuit *gc)
         free(gc->table);
     if (gc->wires)
         free(gc->wires);
-    if (gc->fixed_wires)
-        free(gc->fixed_wires);
     if (gc->outputs)
         free(gc->outputs);
     if (gc->output_perms)
@@ -54,8 +50,7 @@ garble_delete(garble_circuit *gc)
 void
 garble_start_building(garble_circuit *gc, garble_context *ctxt)
 {
-    ctxt->wire_index = gc->n; /* start at first non-input wire */
-    ctxt->n_fixed_wires = 0;
+    ctxt->wire_index = gc->n + 2; /* start at first non-input, non-fixed wire */
     ctxt->n_gates = 0;
 }
 
@@ -74,14 +69,12 @@ garble_size(const garble_circuit *gc, bool wires)
 {
     size_t size = 0;
 
-    size += sizeof gc->n + sizeof gc->m + sizeof gc->q + sizeof gc->r
-        + sizeof gc->n_fixed_wires;
+    size += sizeof gc->n + sizeof gc->m + sizeof gc->q + sizeof gc->r;
     size += sizeof gc->type;
     size += sizeof(garble_gate) * gc->q;
     size += garble_table_size(gc) * gc->q;
     if (wires)
         size += sizeof(block) * 2 * gc->r;
-    size += sizeof(garble_fixed_wire) * gc->n_fixed_wires;
     size += sizeof(int) * gc->m;
     size += sizeof(bool) * gc->m;
     size += sizeof gc->fixed_label;
@@ -105,17 +98,12 @@ garble_to_buffer(const garble_circuit *gc, char *buf, bool wires)
     p += cpy_to_buf(buf + p, &gc->m, sizeof gc->m);
     p += cpy_to_buf(buf + p, &gc->q, sizeof gc->q);
     p += cpy_to_buf(buf + p, &gc->r, sizeof gc->r);
-    p += cpy_to_buf(buf + p, &gc->n_fixed_wires, sizeof gc->n_fixed_wires);
     p += cpy_to_buf(buf + p, &gc->type, sizeof gc->type);
 
     p += cpy_to_buf(buf + p, gc->gates, sizeof(garble_gate) * gc->q);
     p += cpy_to_buf(buf + p, gc->table, garble_table_size(gc) * gc->q);
     if (wires)
         p += cpy_to_buf(buf + p, gc->wires, sizeof(block) * 2 * gc->r);
-    if (gc->n_fixed_wires > 0) {
-        p += cpy_to_buf(buf + p, gc->fixed_wires,
-                        sizeof(garble_fixed_wire) * gc->n_fixed_wires);
-    }
     p += cpy_to_buf(buf + p, gc->outputs, sizeof(int) * gc->m);
     p += cpy_to_buf(buf + p, gc->outputs, sizeof(bool) * gc->m);
     p += cpy_to_buf(buf + p, &gc->fixed_label, sizeof(block));
@@ -130,7 +118,6 @@ garble_from_buffer(garble_circuit *gc, const char *buf, bool wires)
     p += cpy_to_buf(&gc->m, buf + p, sizeof gc->m);
     p += cpy_to_buf(&gc->q, buf + p, sizeof gc->q);
     p += cpy_to_buf(&gc->r, buf + p, sizeof gc->r);
-    p += cpy_to_buf(&gc->n_fixed_wires, buf + p, sizeof gc->n_fixed_wires);
     p += cpy_to_buf(&gc->type, buf + p, sizeof gc->type);
 
     if ((gc->gates = malloc(sizeof(garble_gate) * gc->q)) == NULL)
@@ -145,14 +132,6 @@ garble_from_buffer(garble_circuit *gc, const char *buf, bool wires)
         p += cpy_to_buf(gc->wires, buf + p, sizeof(block) * 2 * gc->r);
     } else {
         gc->wires = NULL;
-    }
-
-    if (gc->n_fixed_wires) {
-        gc->fixed_wires = malloc(sizeof(garble_fixed_wire) * gc->n_fixed_wires);
-        p += cpy_to_buf(gc->fixed_wires, buf + p,
-                        sizeof(garble_fixed_wire) * gc->n_fixed_wires);
-    } else {
-        gc->fixed_wires = NULL;
     }
 
     gc->outputs = malloc(sizeof(int) * gc->m);
@@ -188,7 +167,6 @@ garble_load(garble_circuit *gc, FILE *f, bool wires)
     p += fread(&gc->m, sizeof gc->m, 1, f);
     p += fread(&gc->q, sizeof gc->q, 1, f);
     p += fread(&gc->r, sizeof gc->r, 1, f);
-    p += fread(&gc->n_fixed_wires, sizeof gc->n_fixed_wires, 1, f);
     p += fread(&gc->type, sizeof gc->type, 1, f);
 
     if ((gc->gates = malloc(sizeof(garble_gate) * gc->q)) == NULL)
@@ -203,14 +181,6 @@ garble_load(garble_circuit *gc, FILE *f, bool wires)
         p += fread(gc->wires, sizeof(block), 2 * gc->r, f);
     } else {
         gc->wires = NULL;
-    }
-
-    if (gc->n_fixed_wires) {
-        gc->fixed_wires = calloc(gc->n_fixed_wires, sizeof(garble_fixed_wire));
-        p += fread(gc->fixed_wires, sizeof(garble_fixed_wire),
-                   gc->n_fixed_wires, f);
-    } else {
-        gc->fixed_wires = NULL;
     }
 
     gc->outputs = malloc(sizeof(int) * gc->m);

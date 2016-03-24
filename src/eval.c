@@ -82,18 +82,10 @@ garble_eval(const garble_circuit *gc, const block *input_labels,
 
     /* Set fixed wire labels */
     fixed_label = gc->fixed_label;
-    for (uint64_t i = 0; i < gc->n_fixed_wires; ++i) {
-        switch (gc->fixed_wires[i].type) {
-        case GARBLE_FIXED_WIRE_ZERO:
-            *((char *) &fixed_label) &= 0xfe;
-            labels[gc->fixed_wires[i].idx] = fixed_label;
-            break;
-        case GARBLE_FIXED_WIRE_ONE:
-            *((char *) &fixed_label) |= 0x01;
-            labels[gc->fixed_wires[i].idx] = fixed_label;
-            break;
-        }
-    }
+    *((char *) &fixed_label) &= 0xfe;
+    labels[gc->n] = fixed_label;
+    *((char *) &fixed_label) |= 0x01;
+    labels[gc->n + 1] = fixed_label;
 
     switch (gc->type) {
     case GARBLE_TYPE_STANDARD:

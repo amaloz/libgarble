@@ -413,9 +413,9 @@ INCCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n,
     }
 }
 
-int
-SUBCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n, int *inputs,
-           int *outputs)
+void
+SUBCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n,
+           const int *inputs, int *outputs)
 {
     int tempWires[n / 2];
     int tempWires2[n];
@@ -426,22 +426,26 @@ SUBCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n, int *inputs,
     ADDCircuit(gc, ctxt, n, tempWires2, outputs, NULL);
 }
 
-int SHLCircuit(garble_circuit *gc, garble_context *ctxt,
-        uint64_t n, int *inputs, int *outputs) {
-    outputs[0] = garble_gate_zero(gc, ctxt);
+void
+SHLCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n,
+           const int *inputs, int *outputs)
+{
+    outputs[0] = garble_gate_zero(gc);
     memcpy(outputs + 1, inputs, sizeof(int) * (n - 1));
-    return 0;
 }
 
-int SHRCircuit(garble_circuit *gc, garble_context *ctxt,
-        uint64_t n, int *inputs, int *outputs) {
-    outputs[n - 1] = garble_gate_zero(gc, ctxt);
+void
+SHRCircuit(garble_circuit *gc, garble_context *ctxt, uint64_t n,
+           const int *inputs, int *outputs)
+{
+    outputs[n - 1] = garble_gate_zero(gc);
     memcpy(outputs, inputs + 1, sizeof(int) * (n - 1));
-    return 0;
 }
 
-int MULCircuit(garble_circuit *gc, garble_context *ctxt,
-        uint64_t nt, int *inputs, int *outputs) {
+int
+MULCircuit(garble_circuit *gc, garble_context *ctxt,
+           uint64_t nt, int *inputs, int *outputs)
+{
     uint64_t n = nt / 2;
     int *A = inputs;
     int *B = inputs + n;
@@ -452,14 +456,14 @@ int MULCircuit(garble_circuit *gc, garble_context *ctxt,
 
     for (uint64_t i = 0; i < n; i++) {
         for (uint64_t j = 0; j < i; j++) {
-            tempAnd[i][j] = garble_gate_zero(gc, ctxt);
+            tempAnd[i][j] = garble_gate_zero(gc);
         }
         for (uint64_t j = i; j < i + n; j++) {
             tempAnd[i][j] = garble_next_wire(ctxt);
             garble_gate_AND(gc, ctxt, A[j - i], B[i], tempAnd[i][j]);
         }
         for (uint64_t j = i + n; j < 2 * n; j++)
-            tempAnd[i][j] = garble_gate_zero(gc, ctxt);
+            tempAnd[i][j] = garble_gate_zero(gc);
     }
 
     for (uint64_t j = 0; j < 2 * n; j++) {
