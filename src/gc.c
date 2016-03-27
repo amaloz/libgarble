@@ -89,7 +89,7 @@ garble_to_buffer(const garble_circuit *gc, char *buf, bool wires)
     if (wires)
         p += cpy_to_buf(buf + p, gc->wires, sizeof(block) * 2 * gc->r);
     p += cpy_to_buf(buf + p, gc->outputs, sizeof(int) * gc->m);
-    p += cpy_to_buf(buf + p, gc->outputs, sizeof(bool) * gc->m);
+    p += cpy_to_buf(buf + p, gc->output_perms, sizeof(bool) * gc->m);
     p += cpy_to_buf(buf + p, &gc->fixed_label, sizeof(block));
     p += cpy_to_buf(buf + p, &gc->global_key, sizeof(block));
 
@@ -137,7 +137,7 @@ garble_from_buffer(garble_circuit *gc, const char *buf, bool wires)
     if ((gc->output_perms = malloc(sizeof(bool) * gc->m)) == NULL) {
         goto error;
     }
-    p += cpy_to_buf(gc->outputs, buf + p, sizeof(bool) * gc->m);
+    p += cpy_to_buf(gc->output_perms, buf + p, sizeof(bool) * gc->m);
 
     p += cpy_to_buf(&gc->fixed_label, buf + p, sizeof(block));
     p += cpy_to_buf(&gc->global_key, buf + p, sizeof(block));
@@ -195,7 +195,7 @@ garble_load(garble_circuit *gc, FILE *f, bool wires)
     p += fread(gc->outputs, sizeof(int), gc->m, f);
     if ((gc->output_perms = malloc(sizeof(bool) * gc->m)) == NULL)
         goto error;
-    p += fread(gc->outputs, sizeof(bool), gc->m, f);
+    p += fread(gc->output_perms, sizeof(bool), gc->m, f);
 
     p += fread(&gc->fixed_label, sizeof(block), 1, f);
     p += fread(&gc->global_key, sizeof(block), 1, f);
