@@ -114,8 +114,8 @@ garble_garble(garble_circuit *gc, const block *input_labels,
         gc->wires[2 * gc->n] = fixed_label;
         gc->wires[2 * gc->n + 1] = garble_xor(fixed_label, delta);
         *((char *) &fixed_label) |= 0x01;
-        gc->wires[2 * (gc->n + 1)] = fixed_label;
-        gc->wires[2 * (gc->n + 1) + 1] = garble_xor(fixed_label, delta);
+        gc->wires[2 * (gc->n + 1)] = garble_xor(fixed_label, delta);
+        gc->wires[2 * (gc->n + 1) + 1] = fixed_label;
     }
 
     gc->global_key = garble_random_block();
