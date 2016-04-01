@@ -57,9 +57,11 @@ build(garble_circuit *gc, garble_type_e type)
     builder_finish_building(gc, &ctxt, mixColumnOutputs);
 }
 
-int
-main(int argc, char *argv[])
+static
+void
+run(garble_type_e type)
 {
+    
     garble_circuit gc;
 
     block *inputLabels = garble_allocate_blocks(2 * n);
@@ -67,16 +69,9 @@ main(int argc, char *argv[])
     block *outputMap = garble_allocate_blocks(2 * m);
     bool *inputs = calloc(n, sizeof(bool));
     block seed;
-    int times = 100;
-    garble_type_e type;
+    int times = 100, niterations = 10000;
 
     unsigned char hash[SHA_DIGEST_LENGTH];
-
-    if (argc == 2) {
-        type = atoi(argv[1]);
-    }  else {
-        type = GARBLE_TYPE_STANDARD;
-    }
 
     printf("Type: ");
     switch (type) {
@@ -169,13 +164,13 @@ main(int argc, char *argv[])
         bool *outputs = calloc(m, sizeof(bool));
 
         start = current_time_ns();
-        for (int i = 0; i < 1000; ++i) {
+        for (int i = 0; i < niterations; ++i) {
             (void) garble_garble(&gc, inputLabels, outputMap);
             garble_extract_labels(extractedLabels, inputLabels, inputs, gc.n);
             garble_eval(&gc, extractedLabels, NULL, outputs);
         }
         end = current_time_ns();
-        printf("%llu\n", (end - start) / 1000);
+        printf("%f s\n", (end - start) / 1000000000.0);
 
         free(outputs);
     }
@@ -185,5 +180,15 @@ main(int argc, char *argv[])
     free(extractedLabels);
     free(outputMap);
     free(inputLabels);
+   
+}
+
+int
+main(void)
+{
+    run(GARBLE_TYPE_STANDARD);
+    run(GARBLE_TYPE_HALFGATES);
+    run(GARBLE_TYPE_PRIVACY_FREE);
+
     return 0;
 }
