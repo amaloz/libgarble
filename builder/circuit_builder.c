@@ -25,7 +25,7 @@ void
 builder_finish_building(garble_circuit *gc, garble_context *ctxt,
                        const int *outputs)
 {
-    gc->r = ctxt->wire_index + gc->q;
+    gc->r = ctxt->wire_index;
     for (uint64_t i = 0; i < gc->m; ++i) {
         gc->outputs[i] = outputs[i];
     }
