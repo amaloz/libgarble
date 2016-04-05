@@ -1,6 +1,6 @@
 #include "garble.h"
 #include "circuits.h"
-#include "gates.h"
+#include "circuit_builder.h"
 #include "utils.h"
 
 #include <assert.h>
