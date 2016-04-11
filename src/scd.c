@@ -1,10 +1,13 @@
 #include "garble.h"
+#include "config.h"
 
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include <msgpack.h>
+#ifdef HAVE_MSGPACK
+#  include <msgpack.h>
+#endif
 #include <malloc.h>
 #include <sys/stat.h>
 
@@ -21,6 +24,7 @@ fsize(const char *filename)
 int
 garble_circuit_to_file(garble_circuit *gc, char *fname)
 {
+#ifdef HAVE_MSGPACK
     msgpack_sbuffer *buffer;
     msgpack_packer *pk;
     FILE *f;
@@ -54,11 +58,16 @@ garble_circuit_to_file(garble_circuit *gc, char *fname)
     msgpack_packer_free(pk);
     msgpack_sbuffer_free(buffer);
     return 0;
+#else
+    (void) fprintf(stderr, "need msgpack for garble_circuit_to_file\n");
+    return -1;
+#endif
 }
 
 int
 garble_circuit_from_file(garble_circuit *gc, char *fname)
 {
+#ifdef HAVE_MSGPACK
     msgpack_sbuffer buffer;
     msgpack_unpacked msg;
     msgpack_object *p;
@@ -112,4 +121,8 @@ cleanup:
         fclose(f);
     msgpack_sbuffer_destroy(&buffer);
     return res;
+#else
+    (void) fprintf(stderr, "need msgpack for garble_circuit_from_file\n");
+    return -1;
+#endif
 }
