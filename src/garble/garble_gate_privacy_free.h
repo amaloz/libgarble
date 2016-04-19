@@ -31,30 +31,13 @@ garble_gate_eval_privacy_free(garble_gate_type_e type, block A, block B,
             AES_ecb_encrypt_blks(&tmp, 1, key);
             HA = garble_xor(tmp, mask);
         }
-        switch (type) {
-        case GARBLE_GATE_AND:
-            if (sa) {
-                *((char *) &HA) |= 0x01;
-                W = garble_xor(HA, table[0]);
-                W = garble_xor(W, B);
-            } else {
-                *((char *) &HA) &= 0xfe;
-                W = HA;
-            }
-            break;
-        case GARBLE_GATE_OR:
-            if (sa) {
-                *((char *) &HA) |= 0x01;
-                W = HA;
-            } else {
-                *((char *) &HA) &= 0xfe;
-                W = garble_xor(HA, table[0]);
-                W = garble_xor(W, B);
-            }
-            break;
-        default:
-            assert(false && "unknown gate type");
-            abort();
+        if (sa) {
+            *((char *) &HA) |= 0x01;
+            W = garble_xor(HA, table[0]);
+            W = garble_xor(W, B);
+        } else {
+            *((char *) &HA) &= 0xfe;
+            W = HA;
         }
         *out = W;
     }
@@ -97,21 +80,9 @@ garble_gate_garble_privacy_free(garble_gate_type_e type, block A0, block A1,
         *((char *) &HA0) &= 0xfe;
         *((char *) &HA1) |= 0x01;
         tmp = garble_xor(HA0, HA1);
-        switch (type) {
-        case GARBLE_GATE_AND:
-            table[0] = garble_xor(tmp, B0);
-            *out0 = HA0;
-            *out1 = garble_xor(HA0, delta);
-            break;
-        case GARBLE_GATE_OR:
-            table[0] = garble_xor(tmp, B1);
-            *out1 = HA1;
-            *out0 = garble_xor(HA1, delta);
-            break;
-        default:
-            assert(false && "unknown gate type");
-            abort();
-        }
+        table[0] = garble_xor(tmp, B0);
+        *out0 = HA0;
+        *out1 = garble_xor(HA0, delta);
     }
 }
 

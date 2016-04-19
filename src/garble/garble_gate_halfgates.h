@@ -80,36 +80,18 @@ garble_gate_garble_halfgates(garble_gate_type_e type, block A0, block A1, block 
             HB0 = garble_xor(keys[2], masks[2]);
             HB1 = garble_xor(keys[3], masks[3]);
         }
-        switch (type) {
-        case GARBLE_GATE_AND:
-            table[0] = garble_xor(HA0, HA1);
-            if (pb)
-                table[0] = garble_xor(table[0], delta);
-            W0 = HA0;
-            if (pa)
-                W0 = garble_xor(W0, table[0]);
-            tmp = garble_xor(HB0, HB1);
-            table[1] = garble_xor(tmp, A0);
-            W0 = garble_xor(W0, HB0);
-            if (pb)
-                W0 = garble_xor(W0, tmp);
-            goto finish;
-        case GARBLE_GATE_OR:
-            table[0] = garble_xor(HA0, HA1);
-            if (!pb)
-                table[0] = garble_xor(table[0], delta);
-            W0 = pa ? HA1 : HA0;
-            if ((!pa * !pb) ^ 1)
-                W0 = garble_xor(W0, delta);
-            table[1] = garble_xor(HB0, HB1);
-            table[1] = garble_xor(table[1], A1);
-            W0 = garble_xor(W0, pb ? HB1 : HB0);
-            goto finish;
-        default:
-            assert(false && "unknown gate type");
-            abort();
-        }
-    finish:
+        table[0] = garble_xor(HA0, HA1);
+        if (pb)
+            table[0] = garble_xor(table[0], delta);
+        W0 = HA0;
+        if (pa)
+            W0 = garble_xor(W0, table[0]);
+        tmp = garble_xor(HB0, HB1);
+        table[1] = garble_xor(tmp, A0);
+        W0 = garble_xor(W0, HB0);
+        if (pb)
+            W0 = garble_xor(W0, tmp);
+
         *out0 = W0;
         *out1 = garble_xor(*out0, delta);
     }
