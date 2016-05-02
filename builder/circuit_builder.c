@@ -72,7 +72,7 @@ gate_OR(garble_circuit *gc, garble_context *ctxt, int input0, int input1,
 void
 gate_NOT(garble_circuit *gc, garble_context *ctxt, int input0, int output)
 {
-    _gate(gc, ctxt, input0, input0, output, GARBLE_GATE_NOT);
+    _gate(gc, ctxt, input0, wire_zero(gc), output, GARBLE_GATE_XOR);
 }
 
 int
