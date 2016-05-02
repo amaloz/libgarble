@@ -54,6 +54,7 @@ gate_AND(garble_circuit *gc, garble_context *ctxt, int input0, int input1,
 {
     _gate(gc, ctxt, input0, input1, output, GARBLE_GATE_AND);
 }
+
 void
 gate_XOR(garble_circuit *gc, garble_context *ctxt, int input0, int input1,
          int output)
