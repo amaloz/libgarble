@@ -8,8 +8,8 @@
 #include <stdio.h>
 #include <openssl/sha.h>
 
-#define GARBLE_OK 0
-#define GARBLE_ERR -1
+#define GARBLE_OK    0
+#define GARBLE_ERR (-1)
 
 /* Supported garbling types */
 typedef enum {
@@ -23,20 +23,20 @@ typedef enum {
 
 /* Supported gate types */
 typedef enum {
-    GARBLE_GATE_ZERO = 0,
-    GARBLE_GATE_ONE = 15,
-    GARBLE_GATE_AND = 8,
-    GARBLE_GATE_OR = 14,
-    GARBLE_GATE_XOR = 6,
-    GARBLE_GATE_NOT = 5,
-    GARBLE_GATE_EMPTY = -1,
+    GARBLE_GATE_EMPTY,
+    GARBLE_GATE_ZERO,
+    GARBLE_GATE_ONE,
+    GARBLE_GATE_AND,
+    GARBLE_GATE_OR,
+    GARBLE_GATE_XOR,
+    GARBLE_GATE_NOT,
 } garble_gate_type_e;
 
 typedef struct {
     /* The type of gate this is */
     garble_gate_type_e type;
     /* The input/output wires associated with this gate */
-    uint64_t input0, input1, output;
+    size_t input0, input1, output;
 } garble_gate;
 
 typedef enum {
@@ -54,12 +54,14 @@ typedef struct {
     /* m: number of outputs */
     /* q: number of gates */
     /* r: number of wires */
-    uint64_t n, m, q, r;
+    size_t n, m, q, r;
+    /* number of xor gates */
+    size_t nxors;
     /* garbling scheme type */
     garble_type_e type;
 
     garble_gate *gates;         /* q */
-    block *table;               /* q */
+    block *table;               /* q - nxors */
     block *wires;               /* 2 * r */
     int *outputs;               /* m */
 
@@ -72,8 +74,8 @@ typedef struct {
 } garble_circuit;
 
 /* Return the table size of a garbled circuit */
-inline
-size_t garble_table_size(const garble_circuit *gc)
+static inline size_t
+garble_table_size(const garble_circuit *restrict gc)
 {
     switch(gc->type) {
     case GARBLE_TYPE_STANDARD:
@@ -88,18 +90,20 @@ size_t garble_table_size(const garble_circuit *gc)
 
 /* Create a new circuit */
 int
-garble_new(garble_circuit *gc, uint64_t n, uint64_t m, garble_type_e type);
+garble_new(garble_circuit *gc, size_t n, size_t m, garble_type_e type);
 /* Delete a garbled circuit */
 void
 garble_delete(garble_circuit *gc);
+void
+garble_fprint(FILE *fp, garble_circuit *gc);
 
 /* Garbles a circuit.
    If 'input_labels' is NULL, generate input-wire labels.
    If 'output_labels' is NULL, don't store output-wire labels.
  */
 int
-garble_garble(garble_circuit *gc, const block *input_labels,
-              block *output_labels);
+garble_garble(garble_circuit *restrict gc, const block *restrict input_labels,
+              block *restrict output_labels);
 /* Hash a given garbled circuit */
 void
 garble_hash(const garble_circuit *gc, unsigned char hash[SHA_DIGEST_LENGTH]);
@@ -114,7 +118,7 @@ garble_create_delta(void);
    'privacyfree' specifies whether you are using the privacy free garbling scheme.
  */
 void
-garble_create_input_labels(block *labels, uint64_t n, block *delta,
+garble_create_input_labels(block *labels, size_t n, block *delta,
                            bool privacyfree);
 /* Evaluate garbled circuit 'gc'.
    'input_labels' specifies the input wire labels to use.
@@ -126,13 +130,13 @@ garble_eval(const garble_circuit *gc, const block *input_labels,
             block *output_labels, bool *outputs);
 void
 garble_extract_labels(block *extracted_labels, const block *labels,
-                      const bool *bits, uint64_t n);
+                      const bool *bits, size_t n);
 
 /* XXX: not to be used in practice, as knowing both output blocks is completely
  * insecure! */
 int
 garble_map_outputs(const block *output_labels, const block *map, bool *vals,
-                   uint64_t m);
+                   size_t m);
 
 /* write/read circuit description to/from file */
 int
@@ -141,16 +145,16 @@ int
 garble_circuit_from_file(garble_circuit *gc, char *fname);
 
 size_t
-garble_size(const garble_circuit *gc, bool wires);
+garble_size(const garble_circuit *restrict gc, bool table_only, bool wires);
 
 int
-garble_save(const garble_circuit *gc, FILE *f, bool wires);
+garble_save(const garble_circuit *gc, FILE *f, bool table_only, bool wires);
 int
-garble_load(garble_circuit *gc, FILE *f, bool wires);
+garble_load(garble_circuit *gc, FILE *f, bool table_only, bool wires);
 
+char *
+garble_to_buffer(const garble_circuit *gc, char *buf, bool table_only, bool wires);
 int
-garble_to_buffer(const garble_circuit *gc, char *buf, bool wires);
-int
-garble_from_buffer(garble_circuit *gc, const char *buf, bool wires);
+garble_from_buffer(garble_circuit *gc, const char *buf, bool table_only, bool wires);
 
 #endif

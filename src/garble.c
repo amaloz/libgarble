@@ -10,11 +10,12 @@
 #include <time.h>
 
 static void
-_garble_privacy_free(garble_circuit *gc, const AES_KEY *key, block delta)
+_garble_privacy_free(garble_circuit *restrict gc, const AES_KEY *restrict key, block delta)
 {
+    size_t nxors = 0;
     for (uint64_t i = 0; i < gc->q; ++i) {
         garble_gate *g = &gc->gates[i];
-
+        nxors += (g->type == GARBLE_GATE_XOR) ? 1 : 0;
         garble_gate_garble_privacy_free(g->type,
                                         gc->wires[2 * g->input0],
                                         gc->wires[2 * g->input0 + 1],
@@ -22,17 +23,18 @@ _garble_privacy_free(garble_circuit *gc, const AES_KEY *key, block delta)
                                         gc->wires[2 * g->input1 + 1],
                                         &gc->wires[2 * g->output],
                                         &gc->wires[2 * g->output + 1],
-                                        delta, &gc->table[i], i, key);
+                                        delta, &gc->table[i - nxors], i, key);
     }
 }
 
 
 static void
-_garble_halfgates(garble_circuit *gc, const AES_KEY *key, block delta)
+_garble_halfgates(garble_circuit *restrict gc, const AES_KEY *restrict key, block delta)
 {
-    for (uint64_t i = 0; i < gc->q; i++) {
+    size_t nxors = 0;
+    for (size_t i = 0; i < gc->q; i++) {
         garble_gate *g = &gc->gates[i];
-
+        nxors += (g->type == GARBLE_GATE_XOR) ? 1 : 0;
         garble_gate_garble_halfgates(g->type,
                                      gc->wires[2 * g->input0],
                                      gc->wires[2 * g->input0 + 1],
@@ -40,16 +42,17 @@ _garble_halfgates(garble_circuit *gc, const AES_KEY *key, block delta)
                                      gc->wires[2 * g->input1 + 1],
                                      &gc->wires[2 * g->output],
                                      &gc->wires[2 * g->output + 1],
-                                     delta, &gc->table[2 * i], i, key);
+                                     delta, &gc->table[2 * (i - nxors)], i, key);
     }
 }
 
 static void
-_garble_standard(garble_circuit *gc, const AES_KEY *key, block delta)
+_garble_standard(garble_circuit *restrict gc, const AES_KEY *restrict key, block delta)
 {
-    for (uint64_t i = 0; i < gc->q; i++) {
+    size_t nxors = 0;
+    for (size_t i = 0; i < gc->q; i++) {
         garble_gate *g = &gc->gates[i];
-
+        nxors += (g->type == GARBLE_GATE_XOR) ? 1 : 0;
         garble_gate_garble_standard(g->type,
                                     gc->wires[2 * g->input0],
                                     gc->wires[2 * g->input0 + 1],
@@ -57,13 +60,13 @@ _garble_standard(garble_circuit *gc, const AES_KEY *key, block delta)
                                     gc->wires[2 * g->input1 + 1],
                                     &gc->wires[2 * g->output],
                                     &gc->wires[2 * g->output + 1],
-                                    delta, &gc->table[3 * i], i, key);
+                                    delta, &gc->table[3 * (i - nxors)], i, key);
     }
 }
 
 int
-garble_garble(garble_circuit *gc, const block *input_labels,
-              block *output_labels)
+garble_garble(garble_circuit *restrict gc, const block *restrict input_labels,
+              block *restrict output_labels)
 {
     AES_KEY key;
     block delta;
@@ -77,7 +80,7 @@ garble_garble(garble_circuit *gc, const block *input_labels,
             return GARBLE_ERR;
     }
     if (gc->table == NULL) {
-        gc->table = calloc(gc->q, garble_table_size(gc));
+        gc->table = calloc(gc->q - gc->nxors, garble_table_size(gc));
         if (gc->table == NULL)
             return GARBLE_ERR;
     }
@@ -153,7 +156,7 @@ garble_hash(const garble_circuit *gc, unsigned char hash[SHA_DIGEST_LENGTH])
     SHA_CTX c;
     memset(hash, '\0', SHA_DIGEST_LENGTH);
     (void) SHA1_Init(&c);
-    (void) SHA1_Update(&c, gc->table, gc->q * garble_table_size(gc));
+    (void) SHA1_Update(&c, gc->table, (gc->q - gc->nxors) * garble_table_size(gc));
     (void) SHA1_Final(hash, &c);
 }
 

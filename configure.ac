@@ -47,10 +47,6 @@ fi
 
 
 
-
-CLFAGS=
-
-
 AC_CHECK_HEADERS([wmmintrin.h emmintrin.h xmmintrin.h])
 
 AC_CHECK_HEADERS([openssl/sha.h openssl/rand.h])
@@ -62,14 +58,15 @@ AC_ARG_ENABLE(debug,
   [with_debug=y],
   [with_debug=n])
 
-CFLAGS="$CFLAGS -Wall -Wformat -Wformat-security -Wextra -Wunused \
+CFLAGS=
+CFLAGS="-Wall -Wformat -Wformat-security -Wextra -Wunused \
 -Wshadow -Wmissing-prototypes -Wfloat-equal -Wpointer-arith -Wcast-align \
 -Wstrict-prototypes -Wredundant-decls -Wendif-labels -Wcast-qual -march=native \
 -std=gnu11 -Wpedantic"
 if test x"$with_debug" == x"y"; then
-   CFLAGS="$CFLAGS -g3 -O0"
+    CFLAGS="$CFLAGS -g3 -O0"
 else
-    CFLAGS="$CFLAGS -fomit-frame-pointer -O3"
+    CFLAGS="$CFLAGS -fomit-frame-pointer -Ofast"
 fi
 
 AC_FUNC_MALLOC

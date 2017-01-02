@@ -31,14 +31,14 @@ builder_finish_building(garble_circuit *gc, garble_context *ctxt,
     }
 }
 
-static void
+static inline void
 _gate(garble_circuit *gc, garble_context *ctxt, int input0, int input1,
       int output, garble_gate_type_e type)
 {
     garble_gate *g;
 
     if (ctxt->n_gates == gc->q) {
-        ctxt->n_gates += 100;
+        ctxt->n_gates += 1000;
         gc->gates = realloc(gc->gates, ctxt->n_gates * sizeof(garble_gate));
     }
     g = &gc->gates[gc->q++];
@@ -59,6 +59,7 @@ void
 gate_XOR(garble_circuit *gc, garble_context *ctxt, int input0, int input1,
          int output)
 {
+    gc->nxors++;
     _gate(gc, ctxt, input0, input1, output, GARBLE_GATE_XOR);
 }
 

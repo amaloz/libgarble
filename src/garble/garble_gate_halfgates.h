@@ -8,8 +8,9 @@
 #include <string.h>
 
 static inline void
-garble_gate_eval_halfgates(garble_gate_type_e type, block A, block B, block *out,
-                           const block *table, uint64_t idx, const AES_KEY *key)
+garble_gate_eval_halfgates(garble_gate_type_e type, block A, block B,
+                           block *restrict out, const block *restrict table,
+                           size_t idx, const AES_KEY *restrict key)
 {
     if (type == GARBLE_GATE_XOR) {
         *out = garble_xor(A, B);
@@ -50,8 +51,9 @@ garble_gate_eval_halfgates(garble_gate_type_e type, block A, block B, block *out
 
 static inline void
 garble_gate_garble_halfgates(garble_gate_type_e type, block A0, block A1, block B0,
-                             block B1, block *out0, block *out1, block delta,
-                             block *table, uint64_t idx, const AES_KEY *key)
+                             block B1, block *restrict out0, block *restrict out1,
+                             block delta, block *restrict table, size_t idx,
+                             const AES_KEY *restrict key)
 {
     if (type == GARBLE_GATE_XOR) {
         *out0 = garble_xor(A0, B0);
@@ -69,11 +71,10 @@ garble_gate_garble_halfgates(garble_gate_type_e type, block A0, block A1, block 
         {
             block masks[4], keys[4];
 
-            keys[0] = garble_xor(garble_double(A0), tweak1);
-            keys[1] = garble_xor(garble_double(A1), tweak1);
-            keys[2] = garble_xor(garble_double(B0), tweak2);
-            keys[3] = garble_xor(garble_double(B1), tweak2);
-            memcpy(masks, keys, sizeof keys);
+            masks[0] = keys[0] = garble_xor(garble_double(A0), tweak1);
+            masks[1] = keys[1] = garble_xor(garble_double(A1), tweak1);
+            masks[2] = keys[2] = garble_xor(garble_double(B0), tweak2);
+            masks[3] = keys[3] = garble_xor(garble_double(B1), tweak2);
             AES_ecb_encrypt_blks(keys, 4, key);
             HA0 = garble_xor(keys[0], masks[0]);
             HA1 = garble_xor(keys[1], masks[1]);

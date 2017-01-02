@@ -31,7 +31,7 @@ garble_circuit_to_file(garble_circuit *gc, char *fname)
 
     if ((f = fopen(fname, "wb")) == NULL) {
         perror("fopen");
-        return -1;
+        return GARBLE_ERR;
     }
     buffer = msgpack_sbuffer_new();
     pk = msgpack_packer_new(buffer, msgpack_sbuffer_write);
@@ -60,7 +60,7 @@ garble_circuit_to_file(garble_circuit *gc, char *fname)
     return 0;
 #else
     (void) fprintf(stderr, "need msgpack for garble_circuit_to_file\n");
-    return -1;
+    return GARBLE_ERR;
 #endif
 }
 
@@ -72,7 +72,7 @@ garble_circuit_from_file(garble_circuit *gc, char *fname)
     msgpack_unpacked msg;
     msgpack_object *p;
     FILE *f = NULL;
-    int res = -1;
+    int res = GARBLE_ERR;
 
     msgpack_sbuffer_init(&buffer);
 
@@ -97,7 +97,6 @@ garble_circuit_from_file(garble_circuit *gc, char *fname)
 
     gc->gates = calloc(gc->q, sizeof(garble_gate));
     gc->table = NULL;
-    /* gc->table = calloc(gc->q, garble_table_size(gc)); */
     gc->wires = calloc(2 * gc->r, sizeof(block));
     gc->outputs = calloc(gc->m, sizeof(int));
 
@@ -115,7 +114,7 @@ garble_circuit_from_file(garble_circuit *gc, char *fname)
     }
     msgpack_unpacked_destroy(&msg);
 
-    res = 0;
+    res = GARBLE_OK;
 cleanup:
     if (f)
         fclose(f);
@@ -123,6 +122,6 @@ cleanup:
     return res;
 #else
     (void) fprintf(stderr, "need msgpack for garble_circuit_from_file\n");
-    return -1;
+    return GARBLE_ERR;
 #endif
 }

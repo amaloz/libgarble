@@ -1,9 +1,10 @@
 #include "garble.h"
 
+#include <assert.h>
 #include <string.h>
 
 int
-garble_new(garble_circuit *gc, uint64_t n, uint64_t m, garble_type_e type)
+garble_new(garble_circuit *gc, size_t n, size_t m, garble_type_e type)
 {
     if (gc == NULL)
         return GARBLE_ERR;
@@ -17,9 +18,10 @@ garble_new(garble_circuit *gc, uint64_t n, uint64_t m, garble_type_e type)
     gc->type = type;
     gc->n = n;
     gc->m = m;
-    /* q is incremented in circ/gates.c:_gate */
+    /* q, nxors incremented when building circuit */
     gc->q = 0;
-    /* r is set in garble_finish_building() */
+    gc->nxors = 0;
+    /* r set in garble_finish_building() */
     gc->r = 0;
     return GARBLE_OK;
 }
@@ -41,166 +43,198 @@ garble_delete(garble_circuit *gc)
         free(gc->output_perms);
 }
 
+void
+garble_fprint(FILE *fp, garble_circuit *gc)
+{
+    fprintf(fp, "%lu %lu %lu (%lu) %lu\n", gc->n, gc->m, gc->q, gc->nxors, gc->r);
+    block_fprintf(fp, "%B %B\n", gc->fixed_label, gc->global_key);
+}
+
 size_t
-garble_size(const garble_circuit *gc, bool wires)
+garble_size(const garble_circuit *gc, bool table_only, bool wires)
 {
     size_t size = 0;
-
-    size += sizeof gc->n + sizeof gc->m + sizeof gc->q + sizeof gc->r;
-    size += sizeof gc->type;
-    size += sizeof(garble_gate) * gc->q;
-    size += garble_table_size(gc) * gc->q;
-    if (wires)
-        size += sizeof(block) * 2 * gc->r;
-    size += sizeof(int) * gc->m;
-    size += sizeof(bool) * gc->m;
-    size += sizeof gc->fixed_label;
-    size += sizeof gc->global_key;
+    if (table_only) {
+        size += garble_table_size(gc) * (gc->q - gc->nxors);
+        size += sizeof gc->fixed_label;
+        size += sizeof gc->global_key;
+        size += sizeof(bool) * gc->m;
+    } else {
+        size += sizeof gc->n + sizeof gc->m + sizeof gc->q + sizeof gc->r + sizeof gc->nxors;
+        size += sizeof gc->type;
+        size += sizeof(garble_gate) * gc->q;
+        size += garble_table_size(gc) * (gc->q - gc->nxors);
+        if (wires)
+            size += sizeof(block) * 2 * gc->r;
+        size += sizeof(int) * gc->m;
+        size += sizeof(bool) * gc->m;
+        size += sizeof gc->fixed_label;
+        size += sizeof gc->global_key;
+    }
 
     return size;
 }
 
-inline static size_t
+static inline size_t
 cpy_to_buf(void *out, const void *in, size_t size)
 {
     (void) memcpy(out, in, size);
     return size;
 }
 
-int
-garble_to_buffer(const garble_circuit *gc, char *buf, bool wires)
+char *
+garble_to_buffer(const garble_circuit *gc, char *buf, bool table_only, bool wires)
 {
     size_t p = 0;
+    const size_t size = garble_size(gc, table_only, wires);
 
     if (buf == NULL) {
-        buf = malloc(garble_size(gc, wires));
+        buf = malloc(size);
         if (buf == NULL)
-            return GARBLE_ERR;
+            return NULL;
     }
-        
-    p += cpy_to_buf(buf + p, &gc->n, sizeof gc->n);
-    p += cpy_to_buf(buf + p, &gc->m, sizeof gc->m);
-    p += cpy_to_buf(buf + p, &gc->q, sizeof gc->q);
-    p += cpy_to_buf(buf + p, &gc->r, sizeof gc->r);
-    p += cpy_to_buf(buf + p, &gc->type, sizeof gc->type);
 
-    p += cpy_to_buf(buf + p, gc->gates, sizeof(garble_gate) * gc->q);
-    p += cpy_to_buf(buf + p, gc->table, garble_table_size(gc) * gc->q);
-    if (wires)
-        p += cpy_to_buf(buf + p, gc->wires, sizeof(block) * 2 * gc->r);
-    p += cpy_to_buf(buf + p, gc->outputs, sizeof(int) * gc->m);
-    p += cpy_to_buf(buf + p, gc->output_perms, sizeof(bool) * gc->m);
-    p += cpy_to_buf(buf + p, &gc->fixed_label, sizeof(block));
-    p += cpy_to_buf(buf + p, &gc->global_key, sizeof(block));
-
-    return GARBLE_OK;
+    if (table_only) {
+        p += cpy_to_buf(buf + p, gc->table, garble_table_size(gc) * (gc->q - gc->nxors));
+        p += cpy_to_buf(buf + p, &gc->fixed_label, sizeof(block));
+        p += cpy_to_buf(buf + p, &gc->global_key, sizeof(block));
+        p += cpy_to_buf(buf + p, gc->output_perms, sizeof(bool) * gc->m);
+    } else {
+        p += cpy_to_buf(buf + p, &gc->n, sizeof gc->n);
+        p += cpy_to_buf(buf + p, &gc->m, sizeof gc->m);
+        p += cpy_to_buf(buf + p, &gc->q, sizeof gc->q);
+        p += cpy_to_buf(buf + p, &gc->r, sizeof gc->r);
+        p += cpy_to_buf(buf + p, &gc->r, sizeof gc->nxors);
+        p += cpy_to_buf(buf + p, &gc->type, sizeof gc->type);
+        p += cpy_to_buf(buf + p, gc->gates, sizeof(garble_gate) * gc->q);
+        p += cpy_to_buf(buf + p, gc->table, garble_table_size(gc) * (gc->q - gc->nxors));
+        if (wires)
+            p += cpy_to_buf(buf + p, gc->wires, sizeof(block) * 2 * gc->r);
+        p += cpy_to_buf(buf + p, gc->outputs, sizeof(int) * gc->m);
+        p += cpy_to_buf(buf + p, gc->output_perms, sizeof(bool) * gc->m);
+        p += cpy_to_buf(buf + p, &gc->fixed_label, sizeof(block));
+        p += cpy_to_buf(buf + p, &gc->global_key, sizeof(block));
+    }
+    assert(p == size);
+    return buf;
 }
 
 int
-garble_from_buffer(garble_circuit *gc, const char *buf, bool wires)
+garble_from_buffer(garble_circuit *gc, const char *buf, bool table_only, bool wires)
 {
     size_t p = 0;
 
-    if (gc == NULL)
+    if (gc == NULL || buf == NULL)
         return GARBLE_ERR;
 
-    p += cpy_to_buf(&gc->n, buf + p, sizeof gc->n);
-    p += cpy_to_buf(&gc->m, buf + p, sizeof gc->m);
-    p += cpy_to_buf(&gc->q, buf + p, sizeof gc->q);
-    p += cpy_to_buf(&gc->r, buf + p, sizeof gc->r);
-    p += cpy_to_buf(&gc->type, buf + p, sizeof gc->type);
-
-    if ((gc->gates = malloc(sizeof(garble_gate) * gc->q)) == NULL) {
-        goto error;
-    }
-    p += cpy_to_buf(gc->gates, buf + p, sizeof(garble_gate) * gc->q);
-
-    if ((gc->table = malloc(garble_table_size(gc) * gc->q)) == NULL) {
-        goto error;
-    }
-        
-    p += cpy_to_buf(gc->table, buf + p, garble_table_size(gc) * gc->q);
-
-    if (wires) {
-        if ((gc->wires = malloc(sizeof(block) * 2 * gc->r)) == NULL) {
+    if (table_only) {
+        if ((gc->table = malloc((gc->q - gc->nxors) * garble_table_size(gc))) == NULL) {
             goto error;
         }
-        p += cpy_to_buf(gc->wires, buf + p, sizeof(block) * 2 * gc->r);
+        p += cpy_to_buf(gc->table, buf + p, garble_table_size(gc) * (gc->q - gc->nxors));
+        p += cpy_to_buf(&gc->fixed_label, buf + p, sizeof(block));
+        p += cpy_to_buf(&gc->global_key, buf + p, sizeof(block));
+        if ((gc->output_perms = malloc(sizeof(bool) * gc->m)) == NULL) {
+            goto error;
+        }
+        p += cpy_to_buf(gc->output_perms, buf + p, sizeof(bool) * gc->m);
     } else {
-        gc->wires = NULL;
+        p += cpy_to_buf(&gc->n, buf + p, sizeof gc->n);
+        p += cpy_to_buf(&gc->m, buf + p, sizeof gc->m);
+        p += cpy_to_buf(&gc->q, buf + p, sizeof gc->q);
+        p += cpy_to_buf(&gc->r, buf + p, sizeof gc->r);
+        p += cpy_to_buf(&gc->r, buf + p, sizeof gc->nxors);
+        p += cpy_to_buf(&gc->type, buf + p, sizeof gc->type);
+        if ((gc->gates = malloc(sizeof(garble_gate) * gc->q)) == NULL) {
+            goto error;
+        }
+        p += cpy_to_buf(gc->gates, buf + p, sizeof(garble_gate) * gc->q);
+        if ((gc->table = malloc((gc->q - gc->nxors) * garble_table_size(gc))) == NULL) {
+            goto error;
+        }
+        p += cpy_to_buf(gc->table, buf + p, garble_table_size(gc) * (gc->q - gc->nxors));
+        if (wires) {
+            if ((gc->wires = malloc(sizeof(block) * 2 * gc->r)) == NULL) {
+                goto error;
+            }
+            p += cpy_to_buf(gc->wires, buf + p, sizeof(block) * 2 * gc->r);
+        } else {
+            gc->wires = NULL;
+        }
+        if ((gc->outputs = malloc(sizeof(int) * gc->m)) == NULL) {
+            goto error;
+        }
+        p += cpy_to_buf(gc->outputs, buf + p, sizeof(int) * gc->m);
+        if ((gc->output_perms = malloc(sizeof(bool) * gc->m)) == NULL) {
+            goto error;
+        }
+        p += cpy_to_buf(gc->output_perms, buf + p, sizeof(bool) * gc->m);
+        p += cpy_to_buf(&gc->fixed_label, buf + p, sizeof(block));
+        p += cpy_to_buf(&gc->global_key, buf + p, sizeof(block));
     }
-
-    if ((gc->outputs = malloc(sizeof(int) * gc->m)) == NULL) {
-        goto error;
-    }
-    p += cpy_to_buf(gc->outputs, buf + p, sizeof(int) * gc->m);
-    if ((gc->output_perms = malloc(sizeof(bool) * gc->m)) == NULL) {
-        goto error;
-    }
-    p += cpy_to_buf(gc->output_perms, buf + p, sizeof(bool) * gc->m);
-
-    p += cpy_to_buf(&gc->fixed_label, buf + p, sizeof(block));
-    p += cpy_to_buf(&gc->global_key, buf + p, sizeof(block));
-
     return GARBLE_OK;
-
 error:
     garble_delete(gc);
     return GARBLE_ERR;
 }
 
 int
-garble_save(const garble_circuit *gc, FILE *f, bool wires)
+garble_save(const garble_circuit *gc, FILE *f, bool table_only, bool wires)
 {
     char *buf;
-    size_t res, size = garble_size(gc, wires);
+    const size_t size = garble_size(gc, table_only, wires);
+    size_t res;
 
-    if ((buf = malloc(size)) == NULL)
-        return GARBLE_ERR;
-    garble_to_buffer(gc, buf, wires);
+    buf = garble_to_buffer(gc, NULL, table_only, wires);
     res = fwrite(buf, sizeof(char), size, f);
     free(buf);
     return res == size ? GARBLE_OK : GARBLE_ERR;
 }
 
 int
-garble_load(garble_circuit *gc, FILE *f, bool wires)
+garble_load(garble_circuit *gc, FILE *f, bool table_only, bool wires)
 {
     size_t p = 0;
 
-    p += fread(&gc->n, sizeof gc->n, 1, f);
-    p += fread(&gc->m, sizeof gc->m, 1, f);
-    p += fread(&gc->q, sizeof gc->q, 1, f);
-    p += fread(&gc->r, sizeof gc->r, 1, f);
-    p += fread(&gc->type, sizeof gc->type, 1, f);
-
-    if ((gc->gates = malloc(sizeof(garble_gate) * gc->q)) == NULL)
-        goto error;
-    p += fread(gc->gates, sizeof(garble_gate), gc->q, f);
-
-    if ((gc->table = malloc(garble_table_size(gc) * gc->q)) == NULL)
-        goto error;
-    p += fread(gc->table, garble_table_size(gc), gc->q, f);
-
-    if (wires) {
-        if ((gc->wires = malloc(sizeof(block) * 2 * gc->r)) == NULL)
+    if (table_only) {
+        if ((gc->table = malloc((gc->q - gc->nxors) * garble_table_size(gc))) == NULL)
             goto error;
-        p += fread(gc->wires, sizeof(block), 2 * gc->r, f);
+        p += fread(gc->table, garble_table_size(gc), gc->q - gc->nxors, f);
+        p += fread(&gc->fixed_label, sizeof(block), 1, f);
+        p += fread(&gc->global_key, sizeof(block), 1, f);
+        if ((gc->output_perms = malloc(sizeof(bool) * gc->m)) == NULL)
+            goto error;
+        p += fread(gc->output_perms, sizeof(bool), gc->m, f);
     } else {
-        gc->wires = NULL;
+        p += fread(&gc->n, sizeof gc->n, 1, f);
+        p += fread(&gc->m, sizeof gc->m, 1, f);
+        p += fread(&gc->q, sizeof gc->q, 1, f);
+        p += fread(&gc->r, sizeof gc->r, 1, f);
+        p += fread(&gc->r, sizeof gc->nxors, 1, f);
+        p += fread(&gc->type, sizeof gc->type, 1, f);
+        if ((gc->gates = malloc(sizeof(garble_gate) * gc->q)) == NULL)
+            goto error;
+        p += fread(gc->gates, sizeof(garble_gate), gc->q, f);
+        if ((gc->table = malloc((gc->q - gc->nxors) * garble_table_size(gc))) == NULL)
+            goto error;
+        p += fread(gc->table, garble_table_size(gc), gc->q - gc->nxors, f);
+        if (wires) {
+            if ((gc->wires = malloc(sizeof(block) * 2 * gc->r)) == NULL)
+                goto error;
+            p += fread(gc->wires, sizeof(block), 2 * gc->r, f);
+        } else {
+            gc->wires = NULL;
+        }
+        if ((gc->outputs = malloc(sizeof(int) * gc->m)) == NULL)
+            goto error;
+        p += fread(gc->outputs, sizeof(int), gc->m, f);
+        if ((gc->output_perms = malloc(sizeof(bool) * gc->m)) == NULL)
+            goto error;
+        p += fread(gc->output_perms, sizeof(bool), gc->m, f);
+        p += fread(&gc->fixed_label, sizeof(block), 1, f);
+        p += fread(&gc->global_key, sizeof(block), 1, f);
     }
-
-    if ((gc->outputs = malloc(sizeof(int) * gc->m)) == NULL)
-        goto error;
-    p += fread(gc->outputs, sizeof(int), gc->m, f);
-    if ((gc->output_perms = malloc(sizeof(bool) * gc->m)) == NULL)
-        goto error;
-    p += fread(gc->output_perms, sizeof(bool), gc->m, f);
-
-    p += fread(&gc->fixed_label, sizeof(block), 1, f);
-    p += fread(&gc->global_key, sizeof(block), 1, f);
     return GARBLE_OK;
-
 error:
     garble_delete(gc);
     return GARBLE_ERR;

@@ -8,8 +8,9 @@
 #include <string.h>
 
 static inline void
-garble_gate_eval_standard(garble_gate_type_e type, block A, block B, block *out,
-                           const block *table, uint64_t idx, const AES_KEY *key)
+garble_gate_eval_standard(garble_gate_type_e type, block A, block B,
+                          block *restrict out, const block *restrict table,
+                          uint64_t idx, const AES_KEY *restrict key)
 {
     if (type == GARBLE_GATE_XOR) {
         *out = garble_xor(A, B);
@@ -35,8 +36,9 @@ garble_gate_eval_standard(garble_gate_type_e type, block A, block B, block *out,
     
 static inline void
 garble_gate_garble_standard(garble_gate_type_e type, block A0, block A1, block B0,
-                            block B1, block *out0, block *out1, block delta,
-                            block *table, uint64_t idx, const AES_KEY *key)
+                            block B1, block *restrict out0, block *restrict out1,
+                            block delta, block *restrict table, uint64_t idx,
+                            const AES_KEY *restrict key)
 {
 #ifdef DEBUG
     if ((garble_equal(A0, garble_zero_block())

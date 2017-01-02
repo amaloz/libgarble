@@ -6,29 +6,18 @@
 #include <assert.h>
 #include <string.h>
 
-static inline void
-hash1(block *A, block tweak, const AES_KEY *K)
-{
-    block key;
-    block mask;
-
-    key = garble_xor(garble_double(*A), tweak);
-    mask = key;
-    AES_ecb_encrypt_blks(&key, 1, K);
-    *A = garble_xor(key, mask);
-}
-
 static void
 _eval_privacy_free(const garble_circuit *gc, block *labels, const AES_KEY *key)
 {
+    size_t nxors = 0;
     for (uint64_t i = 0; i < gc->q; i++) {
         garble_gate *g = &gc->gates[i];
-
+        nxors += (g->type == GARBLE_GATE_XOR ? 1 : 0);
         garble_gate_eval_privacy_free(g->type,
                                       labels[g->input0],
                                       labels[g->input1],
                                       &labels[g->output],
-                                      &gc->table[i],
+                                      &gc->table[i - nxors],
                                       i, key);
     }
 }
@@ -36,14 +25,15 @@ _eval_privacy_free(const garble_circuit *gc, block *labels, const AES_KEY *key)
 static void
 _eval_halfgates(const garble_circuit *gc, block *labels, const AES_KEY *key)
 {
-    for (uint64_t i = 0; i < gc->q; i++) {
+    size_t nxors = 0;
+    for (size_t i = 0; i < gc->q; i++) {
         garble_gate *g = &gc->gates[i];
-
+        nxors += (g->type == GARBLE_GATE_XOR ? 1 : 0);
         garble_gate_eval_halfgates(g->type,
                                    labels[g->input0],
                                    labels[g->input1],
                                    &labels[g->output],
-                                   &gc->table[2 * i],
+                                   &gc->table[2 * (i - nxors)],
                                    i, key);
     }
 }
@@ -51,14 +41,15 @@ _eval_halfgates(const garble_circuit *gc, block *labels, const AES_KEY *key)
 static void
 _eval_standard(const garble_circuit *gc, block *labels, AES_KEY *key)
 {
-    for (uint64_t i = 0; i < gc->q; i++) {
+    size_t nxors = 0;
+    for (size_t i = 0; i < gc->q; i++) {
         garble_gate *g = &gc->gates[i];
-
+        nxors += (g->type == GARBLE_GATE_XOR ? 1 : 0);
         garble_gate_eval_standard(g->type,
                                   labels[g->input0],
                                   labels[g->input1],
                                   &labels[g->output],
-                                  &gc->table[3 * i],
+                                  &gc->table[3 * (i - nxors)],
                                   i, key);
     }
 }

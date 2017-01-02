@@ -57,8 +57,7 @@ build(garble_circuit *gc, garble_type_e type)
     builder_finish_building(gc, &ctxt, mixColumnOutputs);
 }
 
-static
-void
+static void
 run(garble_type_e type)
 {
     
@@ -115,10 +114,32 @@ run(garble_type_e type)
             assert(garble_check(&gc2, hash) == GARBLE_OK);
             garble_delete(&gc2);
         }
+
+        {
+            FILE *f;
+            f = fopen("aes.gc", "w");
+            garble_save(&gc, f, true, false);
+            fclose(f);
+            garble_delete(&gc);
+
+            build(&gc, type);
+            f = fopen("aes.gc", "r");
+            garble_load(&gc, f, true, false);
+            fclose(f);
+
+            garble_eval(&gc, extractedLabels, computedOutputMap, outputVals);
+            assert(garble_map_outputs(outputMap, computedOutputMap, outputVals2, m) == GARBLE_OK);
+            for (uint64_t i = 0; i < gc.m; ++i) {
+                assert(outputVals[i] == outputVals2[i]);
+            }
+        }
+
         free(computedOutputMap);
         free(outputVals);
         free(outputVals2);
     }
+
+    
     {
         mytime_t start, end;
         double garblingTime, evalTime;

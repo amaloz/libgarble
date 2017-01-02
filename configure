@@ -13104,10 +13104,6 @@ fi
 
 
 
-
-CLFAGS=
-
-
 for ac_header in wmmintrin.h emmintrin.h xmmintrin.h
 do :
   as_ac_Header=`$as_echo "ac_cv_header_$ac_header" | $as_tr_sh`
@@ -13185,14 +13181,15 @@ else
 fi
 
 
-CFLAGS="$CFLAGS -Wall -Wformat -Wformat-security -Wextra -Wunused \
+CFLAGS=
+CFLAGS="-Wall -Wformat -Wformat-security -Wextra -Wunused \
 -Wshadow -Wmissing-prototypes -Wfloat-equal -Wpointer-arith -Wcast-align \
 -Wstrict-prototypes -Wredundant-decls -Wendif-labels -Wcast-qual -march=native \
 -std=gnu11 -Wpedantic"
 if test x"$with_debug" == x"y"; then
-   CFLAGS="$CFLAGS -g3 -O0"
+    CFLAGS="$CFLAGS -g3 -O0"
 else
-    CFLAGS="$CFLAGS -fomit-frame-pointer -O3"
+    CFLAGS="$CFLAGS -fomit-frame-pointer -Ofast"
 fi
 
 for ac_header in stdlib.h
