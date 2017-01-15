@@ -104,7 +104,7 @@ garble_to_buffer(const garble_circuit *gc, char *buf, bool table_only, bool wire
         p += cpy_to_buf(buf + p, &gc->m, sizeof gc->m);
         p += cpy_to_buf(buf + p, &gc->q, sizeof gc->q);
         p += cpy_to_buf(buf + p, &gc->r, sizeof gc->r);
-        p += cpy_to_buf(buf + p, &gc->r, sizeof gc->nxors);
+        p += cpy_to_buf(buf + p, &gc->nxors, sizeof gc->nxors);
         p += cpy_to_buf(buf + p, &gc->type, sizeof gc->type);
         p += cpy_to_buf(buf + p, gc->gates, sizeof(garble_gate) * gc->q);
         p += cpy_to_buf(buf + p, gc->table, garble_table_size(gc) * (gc->q - gc->nxors));
@@ -143,7 +143,7 @@ garble_from_buffer(garble_circuit *gc, const char *buf, bool table_only, bool wi
         p += cpy_to_buf(&gc->m, buf + p, sizeof gc->m);
         p += cpy_to_buf(&gc->q, buf + p, sizeof gc->q);
         p += cpy_to_buf(&gc->r, buf + p, sizeof gc->r);
-        p += cpy_to_buf(&gc->r, buf + p, sizeof gc->nxors);
+        p += cpy_to_buf(&gc->nxors, buf + p, sizeof gc->nxors);
         p += cpy_to_buf(&gc->type, buf + p, sizeof gc->type);
         if ((gc->gates = malloc(sizeof(garble_gate) * gc->q)) == NULL) {
             goto error;
