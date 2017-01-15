@@ -5,10 +5,8 @@ m4_define([version_micro], [0])
 AC_PREREQ(2.64)
 AC_INIT([libgarble], [version_major.version_minor.version_micro], [amaloz@cs.umd.edu])
 
-dnl AC_CANONICAL_HOST
-
 AC_CONFIG_HEADERS([src/config.h])
-AC_CONFIG_SRCDIR([./])
+AC_CONFIG_SRCDIR([src/])
 
 AC_CONFIG_AUX_DIR([build/autoconf])
 AC_CONFIG_MACRO_DIR([build/autoconf])
@@ -45,8 +43,6 @@ if test "x$with_msgpack" = "xyes"; then
   fi
 fi
 
-
-
 AC_CHECK_HEADERS([wmmintrin.h emmintrin.h xmmintrin.h])
 
 AC_CHECK_HEADERS([openssl/sha.h openssl/rand.h])
@@ -63,6 +59,7 @@ CFLAGS="-Wall -Wformat -Wformat-security -Wextra -Wunused \
 -Wshadow -Wmissing-prototypes -Wfloat-equal -Wpointer-arith -Wcast-align \
 -Wstrict-prototypes -Wredundant-decls -Wendif-labels -Wcast-qual -march=native \
 -std=gnu11 -Wpedantic"
+
 if test x"$with_debug" == x"y"; then
     CFLAGS="$CFLAGS -g3 -O0"
 else
@@ -72,4 +69,5 @@ fi
 AC_FUNC_MALLOC
 
 AC_CONFIG_FILES([Makefile src/Makefile builder/Makefile test/Makefile])
+
 AC_OUTPUT
