@@ -1,12 +1,6 @@
 lib_LTLIBRARIES = libgarble.la
 
-# COMMON_CFLAGS=-Werror -Wall -Wformat -Wformat-security
-# DEV_CFLAGS=-Wextra -Wunused -Wshadow -Wmissing-prototypes -Wcast-qual \
-# 	-march=native
-
-# AM_CFLAGS=$(COMMON_CFLAGS) $(DEV_CFLAGS)
-
-libgarble_la_LDFLAGS= -no-undefined -version-info 0:1:0
+libgarble_la_LDFLAGS= -no-undefined -version-info 0:0:0
 
 libgarble_la_SOURCES =	\
 	block.c	\
