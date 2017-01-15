@@ -11,6 +11,7 @@
 #include <malloc.h>
 #include <sys/stat.h>
 
+#ifdef HAVE_MSGPACK
 static long
 fsize(const char *filename)
 {
@@ -20,6 +21,7 @@ fsize(const char *filename)
         return st.st_size;
     return 0;
 }
+#endif
 
 int
 garble_circuit_to_file(garble_circuit *gc, char *fname)
@@ -59,6 +61,7 @@ garble_circuit_to_file(garble_circuit *gc, char *fname)
     msgpack_sbuffer_free(buffer);
     return 0;
 #else
+    (void) gc; (void) fname;
     (void) fprintf(stderr, "need msgpack for garble_circuit_to_file\n");
     return GARBLE_ERR;
 #endif
@@ -121,6 +124,7 @@ cleanup:
     msgpack_sbuffer_destroy(&buffer);
     return res;
 #else
+    (void) gc; (void) fname;
     (void) fprintf(stderr, "need msgpack for garble_circuit_from_file\n");
     return GARBLE_ERR;
 #endif
