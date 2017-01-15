@@ -55,6 +55,7 @@ garble_size(const garble_circuit *gc, bool table_only, bool wires)
 {
     size_t size = 0;
     if (table_only) {
+        size += sizeof gc->q + sizeof gc->nxors;
         size += garble_table_size(gc) * (gc->q - gc->nxors);
         size += sizeof gc->fixed_label;
         size += sizeof gc->global_key;
@@ -89,12 +90,14 @@ garble_to_buffer(const garble_circuit *gc, char *buf, bool table_only, bool wire
     const size_t size = garble_size(gc, table_only, wires);
 
     if (buf == NULL) {
-        buf = malloc(size);
+        buf = calloc(1, size);
         if (buf == NULL)
             return NULL;
     }
 
     if (table_only) {
+        p += cpy_to_buf(buf + p, &gc->q, sizeof gc->q);
+        p += cpy_to_buf(buf + p, &gc->nxors, sizeof gc->nxors);
         p += cpy_to_buf(buf + p, gc->table, garble_table_size(gc) * (gc->q - gc->nxors));
         p += cpy_to_buf(buf + p, &gc->fixed_label, sizeof(block));
         p += cpy_to_buf(buf + p, &gc->global_key, sizeof(block));
@@ -127,7 +130,11 @@ garble_from_buffer(garble_circuit *gc, const char *buf, bool table_only, bool wi
     if (gc == NULL || buf == NULL)
         return GARBLE_ERR;
 
+    memset(gc, '\0', sizeof(garble_circuit));
+
     if (table_only) {
+        p += cpy_to_buf(&gc->q, buf + p, sizeof gc->q);
+        p += cpy_to_buf(&gc->nxors, buf + p, sizeof gc->nxors);
         if ((gc->table = malloc((gc->q - gc->nxors) * garble_table_size(gc))) == NULL) {
             goto error;
         }
@@ -195,6 +202,8 @@ int
 garble_load(garble_circuit *gc, FILE *f, bool table_only, bool wires)
 {
     size_t p = 0;
+
+    memset(gc, '\0', sizeof(garble_circuit));
 
     if (table_only) {
         if ((gc->table = malloc((gc->q - gc->nxors) * garble_table_size(gc))) == NULL)
