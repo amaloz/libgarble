@@ -15,9 +15,9 @@
 
 #define AES_CIRCUIT_FILE_NAME "./aesCircuit"
 
-static const int roundLimit = 10;
-static const int n = 128 * (10 + 1);
-static const int m = 128;
+static const size_t roundLimit = 10;
+static const size_t n = 128 * (10 + 1);
+static const size_t m = 128;
 
 static void
 build(garble_circuit *gc, garble_type_e type)
@@ -33,7 +33,7 @@ build(garble_circuit *gc, garble_type_e type)
     garble_new(gc, n, m, type);
     builder_start_building(gc, &ctxt);
     builder_init_wires(addKeyInputs, 256);
-    for (int round = 0; round < roundLimit; ++round) {
+    for (size_t round = 0; round < roundLimit; ++round) {
 
         aescircuit_add_round_key(gc, &ctxt, addKeyInputs, addKeyOutputs);
 
@@ -44,12 +44,12 @@ build(garble_circuit *gc, garble_type_e type)
 
         aescircuit_shift_rows(subBytesOutputs, shiftRowsOutputs);
 
-        for (int i = 0; i < 4; i++) {
+        for (size_t i = 0; i < 4; i++) {
             if (round != roundLimit - 1)
                 aescircuit_mix_columns(gc, &ctxt, shiftRowsOutputs + i * 32,
                                        mixColumnOutputs + 32 * i);
         }
-        for (int i = 0; i < 128; i++) {
+        for (size_t i = 0; i < 128; i++) {
             addKeyInputs[i] = mixColumnOutputs[i];
             addKeyInputs[i + 128] = (round + 2) * 128 + i;
         }
@@ -57,10 +57,11 @@ build(garble_circuit *gc, garble_type_e type)
     builder_finish_building(gc, &ctxt, mixColumnOutputs);
 }
 
-static void
+static int
 run(garble_type_e type)
 {
-    
+    const int times = 1,
+              niterations = 1;
     garble_circuit gc;
 
     block *inputLabels = garble_allocate_blocks(2 * n);
@@ -68,7 +69,6 @@ run(garble_type_e type)
     block *outputMap = garble_allocate_blocks(2 * m);
     bool *inputs = calloc(n, sizeof(bool));
     block seed;
-    int times = 100, niterations = 10000;
 
     unsigned char hash[SHA_DIGEST_LENGTH];
 
@@ -88,7 +88,12 @@ run(garble_type_e type)
     build(&gc, type);
 
     seed = garble_seed(NULL);
-    garble_garble(&gc, NULL, outputMap);
+
+    if (garble_garble(&gc, NULL, outputMap) == GARBLE_ERR) {
+        fprintf(stderr, "garble failed\n");
+        return 1;
+    }
+
     memcpy(inputLabels, gc.wires, 2 * gc.n * sizeof(block));
     garble_hash(&gc, hash);
 
@@ -96,7 +101,7 @@ run(garble_type_e type)
         block *computedOutputMap = garble_allocate_blocks(m);
         bool *outputVals = calloc(m, sizeof(bool));
         bool *outputVals2 = calloc(m, sizeof(bool));
-        for (int i = 0; i < n; ++i) {
+        for (size_t i = 0; i < n; ++i) {
             inputs[i] = rand() % 2;
         }
         garble_extract_labels(extractedLabels, inputLabels, inputs, gc.n);
@@ -128,10 +133,13 @@ run(garble_type_e type)
             fclose(f);
 
             garble_eval(&gc, extractedLabels, computedOutputMap, outputVals);
+            garble_delete(&gc);
+
             assert(garble_map_outputs(outputMap, computedOutputMap, outputVals2, m) == GARBLE_OK);
             for (uint64_t i = 0; i < gc.m; ++i) {
                 assert(outputVals[i] == outputVals2[i]);
             }
+
         }
 
         free(computedOutputMap);
@@ -139,7 +147,6 @@ run(garble_type_e type)
         free(outputVals2);
     }
 
-    
     {
         mytime_t start, end;
         double garblingTime, evalTime;
@@ -148,6 +155,8 @@ run(garble_type_e type)
         double *timeGarbleMedians = calloc(times, sizeof(double));
         double *timeEvalMedians = calloc(times, sizeof(double));
         bool *outputs = calloc(m, sizeof(bool));
+
+        build(&gc, type);
 
         for (int j = 0; j < times; j++) {
             for (int i = 0; i < times; i++) {
@@ -173,6 +182,8 @@ run(garble_type_e type)
         evalTime = doubleMean(timeEvalMedians, times);
         printf("%lf %lf\n", garblingTime, evalTime);
 
+        garble_delete(&gc);
+
         free(timeGarble);
         free(timeEval);
         free(timeGarbleMedians);
@@ -184,6 +195,8 @@ run(garble_type_e type)
         unsigned long long start, end;
         bool *outputs = calloc(m, sizeof(bool));
 
+        build(&gc, type);
+
         start = current_time_ns();
         for (int i = 0; i < niterations; ++i) {
             (void) garble_garble(&gc, inputLabels, outputMap);
@@ -193,23 +206,29 @@ run(garble_type_e type)
         end = current_time_ns();
         printf("%f s\n", (end - start) / 1000000000.0);
 
+        garble_delete(&gc);
+
         free(outputs);
     }
 
-    garble_delete(&gc);
+
     free(inputs);
     free(extractedLabels);
     free(outputMap);
     free(inputLabels);
-   
+
+    return 0;
 }
 
 int
 main(void)
 {
-    run(GARBLE_TYPE_STANDARD);
-    run(GARBLE_TYPE_HALFGATES);
-    run(GARBLE_TYPE_PRIVACY_FREE);
+    if (run(GARBLE_TYPE_STANDARD))
+        return 1;
+    if (run(GARBLE_TYPE_HALFGATES))
+        return 1;
+    if (run(GARBLE_TYPE_PRIVACY_FREE))
+        return 1;
 
     return 0;
 }

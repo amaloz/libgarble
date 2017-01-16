@@ -10,7 +10,7 @@ static void
 _eval_privacy_free(const garble_circuit *gc, block *labels, const AES_KEY *key)
 {
     size_t nxors = 0;
-    for (uint64_t i = 0; i < gc->q; i++) {
+    for (size_t i = 0; i < gc->q; i++) {
         garble_gate *g = &gc->gates[i];
         nxors += (g->type == GARBLE_GATE_XOR ? 1 : 0);
         garble_gate_eval_privacy_free(g->type,
@@ -90,14 +90,13 @@ garble_eval(const garble_circuit *gc, const block *input_labels,
         break;
     }
 
-
     if (output_labels) {
-        for (uint64_t i = 0; i < gc->m; ++i) {
+        for (size_t i = 0; i < gc->m; ++i) {
             output_labels[i] = labels[gc->outputs[i]];
         }
     }
     if (outputs) {
-        for (uint64_t i = 0; i < gc->m; ++i) {
+        for (size_t i = 0; i < gc->m; ++i) {
             outputs[i] =
                 (*((char *) &labels[gc->outputs[i]]) & 0x1) ^ gc->output_perms[i];
         }
@@ -110,22 +109,22 @@ garble_eval(const garble_circuit *gc, const block *input_labels,
 
 void
 garble_extract_labels(block *extracted_labels, const block *labels,
-                      const bool *bits, uint64_t n)
+                      const bool *bits, size_t n)
 {
-    for (uint64_t i = 0; i < n; ++i) {
+    for (size_t i = 0; i < n; ++i) {
         extracted_labels[i] = labels[2 * i + (bits[i] ? 1 : 0)];
     }
 }
 
 int
 garble_map_outputs(const block *output_labels, const block *map, bool *vals,
-                   uint64_t m)
+                   size_t m)
 {
-    for (uint64_t i = 0; i < m; i++) {
+    for (size_t i = 0; i < m; i++) {
         if (garble_equal(map[i], output_labels[2 * i])) {
-            vals[i] = 0;
+            vals[i] = false;
         } else if (garble_equal(map[i], output_labels[2 * i + 1])) {
-            vals[i] = 1;
+            vals[i] = true;
         } else {
             return GARBLE_ERR;
         }

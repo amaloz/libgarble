@@ -59,11 +59,13 @@ garble_gate_garble_halfgates(garble_gate_type_e type, block A0, block A1, block 
         *out0 = garble_xor(A0, B0);
         *out1 = garble_xor(*out0, delta);
     } else {
-        long pa = garble_lsb(A0);
-        long pb = garble_lsb(B0);
+        bool pa = false, pb = false;
         block tweak1, tweak2;
         block HA0, HA1, HB0, HB1;
         block tmp, W0;
+
+        pa = garble_lsb(A0);
+        pb = garble_lsb(B0);
 
         tweak1 = garble_make_block(2 * idx, (uint64_t) 0);
         tweak2 = garble_make_block(2 * idx + 1, (uint64_t) 0);

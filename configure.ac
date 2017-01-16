@@ -2,7 +2,6 @@ m4_define([version_major], [0])
 m4_define([version_minor], [0])
 m4_define([version_micro], [0])
 
-AC_PREREQ(2.64)
 AC_INIT([libgarble], [version_major.version_minor.version_micro], [amaloz@cs.umd.edu])
 
 AC_CONFIG_HEADERS([src/config.h])
@@ -18,7 +17,6 @@ AC_DEFINE(VERSION_MICRO, version_micro, [libgarble micro version])
 
 AM_PROG_AR
 
-LT_PREREQ([2.2.2])
 LT_INIT
 
 AC_PROG_CC

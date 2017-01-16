@@ -88,10 +88,8 @@ garble_table_size(const garble_circuit *restrict gc)
     return 0;
 }
 
-/* Create a new circuit */
 int
 garble_new(garble_circuit *gc, size_t n, size_t m, garble_type_e type);
-/* Delete a garbled circuit */
 void
 garble_delete(garble_circuit *gc);
 void

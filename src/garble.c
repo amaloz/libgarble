@@ -34,7 +34,8 @@ _garble_halfgates(garble_circuit *restrict gc, const AES_KEY *restrict key, bloc
     size_t nxors = 0;
     for (size_t i = 0; i < gc->q; i++) {
         garble_gate *g = &gc->gates[i];
-        nxors += (g->type == GARBLE_GATE_XOR) ? 1 : 0;
+        bool isxor = g->type == GARBLE_GATE_XOR;
+        nxors += isxor ? 1 : 0;
         garble_gate_garble_halfgates(g->type,
                                      gc->wires[2 * g->input0],
                                      gc->wires[2 * g->input0 + 1],
@@ -42,7 +43,7 @@ _garble_halfgates(garble_circuit *restrict gc, const AES_KEY *restrict key, bloc
                                      gc->wires[2 * g->input1 + 1],
                                      &gc->wires[2 * g->output],
                                      &gc->wires[2 * g->output + 1],
-                                     delta, &gc->table[2 * (i - nxors)], i, key);
+                                     delta, isxor ? NULL : &gc->table[2 * (i - nxors)], i, key);
     }
 }
 

@@ -46,12 +46,14 @@ block *
 garble_allocate_blocks(size_t nblocks)
 {
     int res;
-    block *blks = NULL;;
-    res = posix_memalign((void **) &blks, 128, sizeof(block) * nblocks);
-    if (res == 0) {
-        return blks;
-    } else {
-        perror("allocate_blocks");
-        return NULL;
-    }
+    block *blks = NULL;
+    blks = calloc(nblocks, sizeof(block));
+    /* res = posix_memalign((void **) &blks, 128, sizeof(block) * nblocks); */
+    /* if (res == 0) { */
+    /*     return blks; */
+    /* } else { */
+    /*     perror("allocate_blocks"); */
+    /*     return NULL; */
+    /* } */
+    return blks;
 }
