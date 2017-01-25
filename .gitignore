@@ -39,5 +39,12 @@ stamp-h1
 autom4te.cache
 libtool
 Makefile
+*.in
 config.h
+configure
+test/aes
+test/circuit
+test/gates
+aclocal.m4
+build/
 
