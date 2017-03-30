@@ -7,6 +7,7 @@ This code is still in alpha and the API is not yet fully stable (as in, future c
 
 Run the following:
 ```
+autoreconf -i
 ./configure
 make
 sudo make install
