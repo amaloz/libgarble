@@ -15,6 +15,8 @@ garble_gate_eval_privacy_free(garble_gate_type_e type, block A, block B,
 {
     if (type == GARBLE_GATE_XOR) {
         *out = garble_xor(A, B);
+    } else if (type == GARBLE_GATE_NOT) {
+        *out = A;
     } else {
         block HA, W;
         bool sa;
@@ -64,6 +66,9 @@ garble_gate_garble_privacy_free(garble_gate_type_e type, block A0, block A1,
     if (type == GARBLE_GATE_XOR) {
         *out0 = garble_xor(A0, B0);
         *out1 = garble_xor(*out0, delta);
+    } else if (type == GARBLE_GATE_NOT) {
+        *out0 = A1;
+        *out1 = A0;
     } else {
         block tweak, tmp;
         block HA0, HA1;

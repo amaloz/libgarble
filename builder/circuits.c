@@ -25,10 +25,16 @@ void
 circuit_or(garble_circuit *gc, garble_context *ctxt, uint64_t n,
            const int *inputs, int *outputs)
 {
-    assert(n >= 2);
+    assert(n == 2);
 
+    int a = builder_next_wire(ctxt);
+    gate_NOT(gc, ctxt, inputs[0], a);
+    int b = builder_next_wire(ctxt);
+    gate_NOT(gc, ctxt, inputs[1], b);
+    int c = builder_next_wire(ctxt);
+    gate_AND(gc, ctxt, a, b, c);
     outputs[0] = builder_next_wire(ctxt);
-    gate_OR(gc, ctxt, inputs[0], inputs[1], outputs[0]);
+    gate_NOT(gc, ctxt, c, outputs[0]);
     if (n > 2) {
         for (uint64_t i = 2; i < n; ++i) {
             int wire = builder_next_wire(ctxt);
