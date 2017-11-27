@@ -48,3 +48,10 @@ test/gates
 aclocal.m4
 build/
 
+CMakeCache.txt
+CMakeFiles/
+*.cmake
+install_manifest.txt
+test_aes
+test_circuit
+test_gates
