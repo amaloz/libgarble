@@ -1,8 +1,8 @@
 #ifndef LIBGARBLE_GARBLE_GATE_HALFGATES_H
 #define LIBGARBLE_GARBLE_GATE_HALFGATES_H
 
-#include "garble.h"
-#include "garble/aes.h"
+#include <garble.h>
+#include <garble/aes.h>
 
 #include <assert.h>
 #include <string.h>

@@ -1,7 +1,7 @@
 #ifndef LIBGARBLE_H
 #define LIBGARBLE_H
 
-#include "garble/block.h"
+#include <garble/block.h>
 
 #include <stdbool.h>
 #include <stdint.h>

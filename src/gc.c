@@ -40,7 +40,8 @@ garble_fprint(FILE *fp, garble_circuit *gc)
 {
     fprintf(fp, "n=%lu m=%lu q=%lu (nxors=%lu) r=%lu\n", gc->n, gc->m, gc->q, gc->nxors, gc->r);
     fprintf(fp, "gates=%p table=%p wires=%p outputs=%p output_perms=%p\n",
-            gc->gates, gc->table, gc->wires, gc->outputs, gc->output_perms);
+            (void *) gc->gates, (void *) gc->table, (void *) gc->wires,
+            (void *) gc->outputs, (void *) gc->output_perms);
     block_fprintf(fp, "%B %B\n", gc->fixed_label, gc->global_key);
 }
 

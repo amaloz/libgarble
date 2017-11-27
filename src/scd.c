@@ -1,5 +1,4 @@
-#include "garble.h"
-#include "config.h"
+#include <garble.h>
 
 #include <assert.h>
 #include <stdio.h>

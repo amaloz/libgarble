@@ -1,6 +1,6 @@
-#include "garble.h"
-#include "garble/block.h"
-#include "circuits.h"
+#include <garble.h>
+#include <garble/block.h>
+#include <garblec/circuits.h>
 
 #include "utils.h"
 

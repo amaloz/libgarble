@@ -45,7 +45,7 @@ garble_random_block(void)
 block *
 garble_allocate_blocks(size_t nblocks)
 {
-    int res;
+    /* int res; */
     block *blks = NULL;
     blks = calloc(nblocks, sizeof(block));
     /* res = posix_memalign((void **) &blks, 128, sizeof(block) * nblocks); */
