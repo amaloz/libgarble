@@ -7,8 +7,7 @@ This code is still in alpha and the API is not yet fully stable (as in, future c
 
 Run the following:
 ```
-autoreconf -i
-./configure
+cmake .
 make
 sudo make install
 ```
@@ -16,9 +15,7 @@ This installs two libraries: `libgarble` for actually garbling and evaluating a 
 
 To test, run the following:
 ```
-cd test
-make aes
-./aes
+./test_aes
 ```
 
 This will garble and evaluate an AES circuit, and present timings in cycles/gate.
